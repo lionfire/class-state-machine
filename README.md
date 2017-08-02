@@ -1,6 +1,7 @@
 # StateMachines.Class - A state machine for C# classes
 
-Currently hosted at [lionfire/core](http://github.com/lionfire/core).  It may be moved here at some point.
+Source currently hosted at [lionfire/core](http://github.com/lionfire/core).  
+It may be moved here at some point.
 
 ## Features and Overview of Use
 
