@@ -7,6 +7,6 @@ install:
 # - nuget install xunit.runners -Version 2.2.0 -OutputDirectory testrunner
 
 script:
- - dotnet build -c Release StateMachines.Class.sln 
+ - dotnet build -v -c Release StateMachines.Class.sln 
 # - dotnet test src/LionFire.StateMachines.Class.Tests/LionFire.StateMachines.Class.Tests.csproj
 # - mono ./testrunner/xunit.runners.1.9.2/tools/xunit.console.clr4.exe ./MyProject.Tests/bin/Release/MyProject.Tests.dll
