@@ -1,0 +1,20 @@
+<Project>
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\obj\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition=" '$(BaseOutputPath)' == '' ">$(MSBuildThisFileDirectory)..\bin\$(MSBuildProjectName)\</BaseOutputPath>
+
+    <Authors>Jared Thirsk</Authors>
+    <Copyright>2017 Jared Thirsk</Copyright>
+    <PackageLicenseUrl>https://github.com/lionfire/class-state-machine/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageProjectUrl>http://open.lionfire.software/</PackageProjectUrl>
+    <PackageIconUrl>https://avatars1.githubusercontent.com/u/19334699?v=4&amp;s=200</PackageIconUrl>
+    <RepositoryUrl>https://github.com/lionfire/class-state-machine</RepositoryUrl>
+    <NeutralLanguage>English (United States)</NeutralLanguage>
+     
+    <Version>1.0.0</Version>
+    <AssemblyVersion>1.0.0</AssemblyVersion>
+    <FileVersion>1.0.0</FileVersion>
+  </PropertyGroup>
+</Project>
