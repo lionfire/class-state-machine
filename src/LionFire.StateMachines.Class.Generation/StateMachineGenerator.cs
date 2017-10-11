@@ -135,7 +135,7 @@ namespace LionFire.StateMachines.Class.Generation
 
         List<Assembly> assemblies = new System.Collections.Generic.List<Assembly>();
 
-        int i = 0;
+        //int i = 0;
 
         //public string GetFullName(INamedTypeSymbol nts)
         //{
