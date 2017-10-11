@@ -1,0 +1,11 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.5</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LionFire.StateMachines.Class.Abstractions\LionFire.StateMachines.Class.Abstractions.csproj" />
+  </ItemGroup>
+
+</Project>

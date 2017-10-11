@@ -1,15 +1,21 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26430.14
+VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class", "src\LionFire.StateMachines.Class\LionFire.StateMachines.Class.csproj", "{DC128BD5-0722-4929-B28B-21E03029E013}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Generation", "src\LionFire.StateMachines.Class.Generation\LionFire.StateMachines.Class.Generation.csproj", "{CDF4C9A7-4DA6-4549-A7F3-422FEB2FC5F3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests", "src\LionFire.StateMachines.Class.Tests\LionFire.StateMachines.Class.Tests.csproj", "{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests", "test\LionFire.StateMachines.Class.Tests\LionFire.StateMachines.Class.Tests.csproj", "{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LionFire.StateMachines.Class.Tests.Model", "src\LionFire.StateMachines.Class.Tests.Model\LionFire.StateMachines.Class.Tests.Model.csproj", "{29C9D514-707F-475F-808B-4912BAFB05FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests.Model", "test\LionFire.StateMachines.Class.Tests.Model\LionFire.StateMachines.Class.Tests.Model.csproj", "{29C9D514-707F-475F-808B-4912BAFB05FE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Abstractions", "src\LionFire.StateMachines.Class.Abstractions\LionFire.StateMachines.Class.Abstractions.csproj", "{DBAED150-40F4-4360-BE7E-970D42E471EF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7324923F-DEB4-45F2-8FE1-380B518D2F49}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests.ExternalModel", "test\LionFire.StateMachines.Class.Tests.ExternalModel\LionFire.StateMachines.Class.Tests.ExternalModel.csproj", "{E365F69D-7657-49FA-931A-E05E0585A753}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,8 +39,24 @@ Global
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E365F69D-7657-49FA-931A-E05E0585A753}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E365F69D-7657-49FA-931A-E05E0585A753}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E365F69D-7657-49FA-931A-E05E0585A753}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E365F69D-7657-49FA-931A-E05E0585A753}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{272C9B29-20F5-4AEC-A4FE-14AFF4F46126} = {7324923F-DEB4-45F2-8FE1-380B518D2F49}
+		{29C9D514-707F-475F-808B-4912BAFB05FE} = {7324923F-DEB4-45F2-8FE1-380B518D2F49}
+		{E365F69D-7657-49FA-931A-E05E0585A753} = {7324923F-DEB4-45F2-8FE1-380B518D2F49}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {9B533A64-A987-4950-B28E-B0928B8DFEB5}
 	EndGlobalSection
 EndGlobal

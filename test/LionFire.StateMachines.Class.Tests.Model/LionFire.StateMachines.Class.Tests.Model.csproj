@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.5</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.4.11" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\LionFire.StateMachines.Class.Generation\LionFire.StateMachines.Class.Generation.csproj" />
+    <ProjectReference Include="..\LionFire.StateMachines.Class.Tests.ExternalModel\LionFire.StateMachines.Class.Tests.ExternalModel.csproj" />
+  </ItemGroup>
+</Project>

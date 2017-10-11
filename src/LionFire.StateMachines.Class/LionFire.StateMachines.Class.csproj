@@ -1,0 +1,46 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <!--<UsingTask TaskName="GetCurrentBuildVersion" AssemblyFile="$(MSBuildThisFileFullPath)\..\..\..\deps\DC.Build.Tasks.dll" />-->
+
+
+  <PropertyGroup>
+    <!--<AssemblyVersion>1.0.0.0</AssemblyVersion>-->
+    <FileVersion>1.0.0.0</FileVersion>
+    <Version>1.0.0.1</Version>
+    <VersionPrefix>1.0.1</VersionPrefix>
+    <TargetFramework>netstandard1.5</TargetFramework>
+    <RootNamespace>LionFire</RootNamespace>
+  </PropertyGroup>
+
+  <PropertyGroup Condition=" '$(Configuration)'=='Release'">
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <Compile Remove="StateMachines\States\**" />
+    <Compile Remove="States\**" />
+    <EmbeddedResource Remove="StateMachines\States\**" />
+    <EmbeddedResource Remove="States\**" />
+    <None Remove="StateMachines\States\**" />
+    <None Remove="States\**" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\LionFire.StateMachines.Class.Abstractions\LionFire.StateMachines.Class.Abstractions.csproj" />
+  </ItemGroup>
+
+
+  <!--<Target Name="BeforeBuildActionsProject1" BeforeTargets="BeforeBuild">
+    <GetCurrentBuildVersion BaseVersion="$(FileVersion)">
+      <Output TaskParameter="Version" PropertyName="FileVersion" />
+    </GetCurrentBuildVersion>
+    <PropertyGroup>
+      <AssemblyVersion>$(FileVersion)</AssemblyVersion>
+    </PropertyGroup>
+  </Target>-->
+
+  
+</Project>

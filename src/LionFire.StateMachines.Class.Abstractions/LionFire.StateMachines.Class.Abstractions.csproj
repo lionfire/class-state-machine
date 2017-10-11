@@ -1,0 +1,12 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netstandard1.5</TargetFramework>
+    <RootNamespace>LionFire.StateMachines.Class</RootNamespace>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+    <Description>Attributes for describing state machine states and transitions.  Can be used to auto-generate state machines by using the LionFire.StateMachines.Class.Generation package.</Description>
+    <Copyright>Jared Thirsk</Copyright>
+    <PackageProjectUrl>http://open.lionfire.software</PackageProjectUrl>
+  </PropertyGroup>
+
+</Project>

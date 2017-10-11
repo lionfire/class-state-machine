@@ -4,4 +4,5 @@ A convention-oriented state machine to ease the burden for typical C# classes.  
 
 --> Docs & walkthrough: [lionfire.readthedocs.io/en/latest/class-state-machine/](https://lionfire.readthedocs.io/en/latest/class-state-machine/index.html) <--
 
-Source currently hosted at [lionfire/core](http://github.com/lionfire/core).   It may be moved here at some point.
+[//]: <> (Source currently hosted at [lionfire/core] http://github.com/lionfire/core.   It may be moved here at some point.)
+
