@@ -6,9 +6,9 @@
 <Description>Auto-generate a class that implements a state machine.  Currently depends on LionFire.StateMachines.Class to run, and LionFire.StateMachines.Class.Attributes to describe state and transition enum fields.</Description>
 <Copyright>Jared Thirsk</Copyright>
 <PackageProjectUrl>http://open.lionfire.software</PackageProjectUrl>
-<Version>2.0.0</Version>
-<AssemblyVersion>2.0.0</AssemblyVersion>
-<FileVersion>2.0.0</FileVersion>
+<!--<Version>2.0.1</Version>
+<AssemblyVersion>2.0.1</AssemblyVersion>
+<FileVersion>2.0.1</FileVersion>-->
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="StateInfo\**" />
@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.11" />
+    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 

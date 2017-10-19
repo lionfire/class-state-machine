@@ -15,6 +15,7 @@ using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Runtime.Loader;
 using System.Diagnostics;
 using LionFire.ExtensionMethods.CodeAnalysis;
+using Microsoft.Extensions.DependencyModel;
 
 namespace LionFire.StateMachines.Class.Generation
 {
@@ -78,7 +79,7 @@ namespace LionFire.StateMachines.Class.Generation
         }
         private HashSet<string> leavingPrefixes;
 
-    
+
         private List<string> logEntries = new List<string>();
 
         public const BindingFlags bf = BindingFlags.Static | BindingFlags.Public;
@@ -124,9 +125,28 @@ namespace LionFire.StateMachines.Class.Generation
             foreach (var r in context.Compilation.References)
             {
                 if (r.Display.Contains(".nuget")) continue;
-                Log("#r \"" + r.Display + "\"");
 
-                assemblies.Add(AssemblyLoadContext.Default.LoadFromAssemblyPath(r.Display));
+                var logText = "#r \"" + r.Display + "\"";
+                
+                Assembly loadedAssembly = null;
+                try
+                {
+                    loadedAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(r.Display);
+                    
+                }
+                catch (FileLoadException lfe) when (lfe.Message == "Assembly with same name is already loaded")
+                {
+                    alreadyLoadedAssemblies.Add(r.Display);
+                    logText += " (Already loaded)";
+                }
+                catch (Exception ex)
+                {
+                    Log($"Failed to load assembly {r.Display}.  Exception: " + ex.ToString());
+                    continue;
+                }
+                if(loadedAssembly != null) assemblies.Add(loadedAssembly);
+                
+                Log(logText);
             }
             Log();
 
@@ -134,6 +154,7 @@ namespace LionFire.StateMachines.Class.Generation
         }
 
         List<Assembly> assemblies = new System.Collections.Generic.List<Assembly>();
+        List<string> alreadyLoadedAssemblies = new System.Collections.Generic.List<string>();
 
         //int i = 0;
 
@@ -175,20 +196,56 @@ namespace LionFire.StateMachines.Class.Generation
                 foreach (var a in assemblies)
                 {
                     type = a.GetType(combined);
-
+                    //{
+                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
+                    //    {
+                    // Log("LionFire.Execution.Abstractions types:");
+                    //        foreach (var t in a.GetTypes())
+                    //        {
+                    //            Log(".. " + t.FullName);
+                    //        }
+                    //    }
+                    //}
                     if (type != null) break;
-                    else
-                    {
-                        if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
-                        {
-                            foreach (var t in a.GetTypes())
-                            {
-                                Log(".. " + t.FullName);
-                            }
-                        }
-                    }
                 }
             }
+
+            if (type == null)
+            {
+                foreach (var a in alreadyLoadedAssemblies)
+                {
+                    var name = combined + ", " + Path.GetFileNameWithoutExtension(a) + ", Version=2.0.49.0, Culture=neutral, PublicKeyToken=null";
+                    try
+                    {
+                        type = Type.GetType(name);
+                    }
+                    catch { }
+                    Log("Test: " + this.GetType().AssemblyQualifiedName);
+                    Log("Qualified: " +name);
+                    if (type != null) break;
+                }
+            }
+
+#if NETSTANDARD2_0
+            if (type == null)
+            {
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    type = a.GetType(combined);
+                    if (type != null) break;
+                    //else
+                    //{
+                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
+                    //    {
+                    //        foreach (var t in a.GetTypes())
+                    //        {
+                    //            Log(".. " + t.FullName);
+                    //        }
+                    //    }
+                    //}
+                }
+            }
+#endif
 
             if (type != null) Log("Resolved " + type.FullName);
             else
@@ -226,214 +283,230 @@ namespace LionFire.StateMachines.Class.Generation
         }
         private Task<SyntaxList<MemberDeclarationSyntax>> Part2(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
-            var dClass = (ClassDeclarationSyntax)context.ProcessingMember;
-
-            StateMachineAttribute stateMachineAttribute;
-
-            if (attributeData.ConstructorArguments.Any())
+            ClassDeclarationSyntax c = null;
+            try
             {
-                if (attributeData.ConstructorArguments[0].Value is int flagsInt)
+                var dClass = (ClassDeclarationSyntax)context.ProcessingMember;
+                c = ClassDeclaration(dClass.Identifier).AddModifiers(Token(SyntaxKind.PartialKeyword));
+                StateMachineAttribute stateMachineAttribute;
+
+                if (attributeData.ConstructorArguments.Any())
                 {
-                    stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute), (GenerateStateMachineFlags)flagsInt);
+                    if (attributeData.ConstructorArguments[0].Value is int flagsInt)
+                    {
+                        stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute), (GenerateStateMachineFlags)flagsInt);
+                    }
+                    else
+                    {
+                        stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute),
+                            ResolveType(context, attributeData.ConstructorArguments[0].Value),
+                            ResolveType(context, attributeData.ConstructorArguments[1].Value),
+                            (GenerateStateMachineFlags)attributeData.ConstructorArguments[2].Value
+                            );
+                    }
                 }
                 else
                 {
-                    stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute),
-                        ResolveType(context, attributeData.ConstructorArguments[0].Value),
-                        ResolveType(context, attributeData.ConstructorArguments[1].Value),
-                        (GenerateStateMachineFlags)attributeData.ConstructorArguments[2].Value
-                        );
+                    stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute));
                 }
-            }
-            else
-            {
-                stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute));
-            }
 
-            Log();
-            Log("StateMachine: ");
-            Log(" - StateType: " + stateMachineAttribute.StateType.FullName);
-            Log(" - TransitionType: " + stateMachineAttribute.TransitionType.FullName);
-            Log(" - Options: " + stateMachineAttribute.Options.ToString());
-            Log();
-            foreach (var na in attributeData.NamedArguments)
-            {
-                var pi = typeof(StateMachineAttribute).GetProperty(na.Key);
-                pi.SetValue(stateMachineAttribute, na.Value.Value);
-            }
-
-            if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisableGeneration)) { return Task.FromResult(new SyntaxList<MemberDeclarationSyntax>()); }
-
-            Type stateType = stateMachineAttribute.StateType;
-            Type transitionType = stateMachineAttribute.TransitionType;
-
-            var allStates = new HashSet<string>(stateType.GetFields(bf).Select(fi => fi.Name));
-            var allTransitions = new HashSet<string>(transitionType.GetFields(bf).Select(fi => fi.Name));
-            HashSet<string> usedStates;
-            HashSet<string> usedTransitions;
-
-            if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisablePruneUnusedTransitions))
-            {
-                usedTransitions = allTransitions;
-            }
-            else
-            {
-                usedTransitions = new HashSet<string>();
-                foreach (var md in dClass.Members.OfType<MethodDeclarationSyntax>())
+                Log();
+                Log("StateMachine: ");
+                Log(" - StateType: " + stateMachineAttribute.StateType.FullName);
+                Log(" - TransitionType: " + stateMachineAttribute.TransitionType.FullName);
+                Log(" - Options: " + stateMachineAttribute.Options.ToString());
+                Log();
+                foreach (var na in attributeData.NamedArguments)
                 {
-                    foreach (var transition in allTransitions)
-                    {
-                        if (md.Identifier.Text.EndsWith(transition))
-                        {
-                            var prefix = md.Identifier.Text.Substring(0, md.Identifier.Text.Length - transition.Length);
+                    var pi = typeof(StateMachineAttribute).GetProperty(na.Key);
+                    pi.SetValue(stateMachineAttribute, na.Value.Value);
+                }
 
-                            if (!usedTransitions.Contains(transition))
+                if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisableGeneration)) { return Task.FromResult(new SyntaxList<MemberDeclarationSyntax>()); }
+
+                Type stateType = stateMachineAttribute.StateType;
+                Type transitionType = stateMachineAttribute.TransitionType;
+
+                var allStates = new HashSet<string>(stateType.GetFields(bf).Select(fi => fi.Name));
+                var allTransitions = new HashSet<string>(transitionType.GetFields(bf).Select(fi => fi.Name));
+                HashSet<string> usedStates;
+                HashSet<string> usedTransitions;
+
+                if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisablePruneUnusedTransitions))
+                {
+                    usedTransitions = allTransitions;
+                }
+                else
+                {
+                    usedTransitions = new HashSet<string>();
+                    foreach (var md in dClass.Members.OfType<MethodDeclarationSyntax>())
+                    {
+                        foreach (var transition in allTransitions)
+                        {
+                            if (md.Identifier.Text.EndsWith(transition))
                             {
-                                //Log(" - method " + md.Identifier.Text + $"() for {transition}");
-                                usedTransitions.Add(transition);
+                                var prefix = md.Identifier.Text.Substring(0, md.Identifier.Text.Length - transition.Length);
+
+                                if (!usedTransitions.Contains(transition))
+                                {
+                                    //Log(" - method " + md.Identifier.Text + $"() for {transition}");
+                                    usedTransitions.Add(transition);
+                                }
                             }
                         }
                     }
                 }
-            }
 
-            if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisablePruneUnusedStates))
-            {
-                usedStates = allStates;
-            }
-            else
-            {
-                usedStates = new HashSet<string>();
-                foreach (var md in dClass.Members.OfType<MethodDeclarationSyntax>())
+                if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisablePruneUnusedStates))
                 {
-                    foreach (var state in allStates)
+                    usedStates = allStates;
+                }
+                else
+                {
+                    usedStates = new HashSet<string>();
+                    foreach (var md in dClass.Members.OfType<MethodDeclarationSyntax>())
                     {
-                        if (md.Identifier.Text.EndsWith(state))
+                        foreach (var state in allStates)
                         {
-                            var prefix = md.Identifier.Text.Substring(0, md.Identifier.Text.Length - state.Length);
-
-                            if (!usedStates.Contains(state))
+                            if (md.Identifier.Text.EndsWith(state))
                             {
-                                //Log(" - method " + md.Identifier.Text + $"() for state '{state}'");
-                                usedStates.Add(state);
+                                var prefix = md.Identifier.Text.Substring(0, md.Identifier.Text.Length - state.Length);
+
+                                if (!usedStates.Contains(state))
+                                {
+                                    //Log(" - method " + md.Identifier.Text + $"() for state '{state}'");
+                                    usedStates.Add(state);
+                                }
                             }
                         }
                     }
-                }
-                foreach (var transition in usedTransitions)
-                {
-                    var info = StateMachine.GetTransitionInfo(stateType, transitionType, Enum.Parse(stateMachineAttribute.TransitionType, transition));
-
-                    if (info != null)
+                    foreach (var transition in usedTransitions)
                     {
-                        if (!usedStates.Contains(info.From.ToString())) usedStates.Add(info.From.ToString());
-                        if (!usedStates.Contains(info.To.ToString())) usedStates.Add(info.To.ToString());
+                        var info = StateMachine.GetTransitionInfo(stateType, transitionType, Enum.Parse(stateMachineAttribute.TransitionType, transition));
+
+                        if (info != null)
+                        {
+                            if (!usedStates.Contains(info.From.ToString())) usedStates.Add(info.From.ToString());
+                            if (!usedStates.Contains(info.To.ToString())) usedStates.Add(info.To.ToString());
+                        }
                     }
                 }
+
+                Log("States:");
+
+                foreach (var n in stateMachineAttribute.StateType.GetFields(bf).Select(fi => fi.Name))
+                {
+                    Log((usedStates.Contains(n) ? usedIndicator : unusedIndicator) + n);
+
+                }
+                Log();
+
+                Log("Transitions:");
+                foreach (var n in stateMachineAttribute.TransitionType.GetFields(bf).Select(fi => fi.Name))
+                {
+                    Log((usedTransitions.Contains(n) ? usedIndicator : unusedIndicator) + n);
+                }
+                Log();
+
+                //CompilationUnitSyntax cu = ClassDeclaration()
+                //       .AddUsings(UsingDirective(IdentifierName("System")))
+                //       .AddUsings(UsingDirective(IdentifierName("LionFire.StateMachines.Class")))
+                //    ;
+
+
+
+                //foreach (var used in usedStates)
+                //{
+                //    var m = MethodDeclaration(SyntaxFactory.ParseTypeName("void"), used);
+                //    //m = m.WithBody((BlockSyntax)BlockSyntax.DeserializeFrom(new MemoryStream(UTF8Encoding.UTF8.GetBytes("{}"))));
+                //    var block = Block();
+                //    m = m.WithBody(block);
+                //    c = c.AddMembers(m);
+                //}
+                foreach (var used in usedTransitions)
+                {
+                    var md = MethodDeclaration(
+                                PredefinedType(
+                                    Token(SyntaxKind.VoidKeyword)),
+                                Identifier(used))
+                            .WithModifiers(
+                                TokenList(
+                                    Token(SyntaxKind.PublicKeyword)))
+                            .WithExpressionBody(
+                                ArrowExpressionClause(
+                                            InvocationExpression(
+                                                MemberAccessExpression(
+                                                    SyntaxKind.SimpleMemberAccessExpression,
+                                                    IdentifierName(stateMachineAttribute.StateMachineStatePropertyName),
+                                                    IdentifierName(nameof(StateMachineState<object, object, object>.ChangeState))))
+                                            .WithArgumentList(
+                                                ArgumentList(
+                                                    SingletonSeparatedList<ArgumentSyntax>(
+                                                        Argument(
+                                                            MemberAccessExpression(
+                                                                SyntaxKind.SimpleMemberAccessExpression,
+                                                                IdentifierName(transitionType.Name),
+                                                                IdentifierName(used))))))))
+                                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                    ;
+
+                    c = c.AddMembers(md);
+                }
+                c = AddStateMachineProperty(c, stateMachineAttribute);
+
+                //foreach (var used in usedStates)
+                //{
+                //    var md = MethodDeclaration(
+                //                PredefinedType(
+                //                    Token(SyntaxKind.VoidKeyword)),
+                //                Identifier(used))
+                //            .WithModifiers(
+                //                TokenList(
+                //                    Token(SyntaxKind.PublicKeyword)))
+                //            .WithExpressionBody(
+                //                ArrowExpressionClause(
+                //                            //SingletonList<StatementSyntax>(
+                //                            //    ExpressionStatement(
+                //                            InvocationExpression(
+                //                                MemberAccessExpression(
+                //                                    SyntaxKind.SimpleMemberAccessExpression,
+                //                                    IdentifierName("stateMachine"),
+                //                                    IdentifierName("ChangeState")))
+                //                            .WithArgumentList(
+                //                                ArgumentList(
+                //                                    SingletonSeparatedList<ArgumentSyntax>(
+                //                                        Argument(
+                //                                            MemberAccessExpression(
+                //                                                SyntaxKind.SimpleMemberAccessExpression,
+                //                                                IdentifierName(transitionType.Name),
+                //                                                IdentifierName(used))))))))
+                //                                                //))
+                //                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
+                //    ;
+                //    c = c.AddMembers(md);
+
+                //}
+                //NamespaceDeclarationSyntax ns = NamespaceDeclaration(IdentifierName(typeInfo.Type.ContainingNamespace.Name));
+                //cu = cu.AddMembers(ns);
+
+                //ClassDeclarationSyntax c = ClassDeclaration(typeInfo.Type.Name)
+                //    //.AddModifiers(Token(SyntaxKind.PrivateKeyword))
+                //    .AddModifiers(Token(SyntaxKind.PartialKeyword))
+                //    ;
+                //ns = ns.AddMembers(c);
+
             }
-
-            Log("States:");
-
-            foreach (var n in stateMachineAttribute.StateType.GetFields(bf).Select(fi => fi.Name))
+            catch (Exception ex)
             {
-                Log((usedStates.Contains(n) ? usedIndicator : unusedIndicator) + n);
-
+                if (c != null)
+                {
+                    Log("Unhandled exception: " + ex);
+                }
+                else
+                {
+                    throw;
+                }
             }
-            Log();
-
-            Log("Transitions:");
-            foreach (var n in stateMachineAttribute.TransitionType.GetFields(bf).Select(fi => fi.Name))
-            {
-                Log((usedTransitions.Contains(n) ? usedIndicator : unusedIndicator) + n);
-            }
-            Log();
-
-            //CompilationUnitSyntax cu = ClassDeclaration()
-            //       .AddUsings(UsingDirective(IdentifierName("System")))
-            //       .AddUsings(UsingDirective(IdentifierName("LionFire.StateMachines.Class")))
-            //    ;
-
-            ClassDeclarationSyntax c = ClassDeclaration(dClass.Identifier).AddModifiers(Token(SyntaxKind.PartialKeyword));
-
-            //foreach (var used in usedStates)
-            //{
-            //    var m = MethodDeclaration(SyntaxFactory.ParseTypeName("void"), used);
-            //    //m = m.WithBody((BlockSyntax)BlockSyntax.DeserializeFrom(new MemoryStream(UTF8Encoding.UTF8.GetBytes("{}"))));
-            //    var block = Block();
-            //    m = m.WithBody(block);
-            //    c = c.AddMembers(m);
-            //}
-            foreach (var used in usedTransitions)
-            {
-                var md = MethodDeclaration(
-                            PredefinedType(
-                                Token(SyntaxKind.VoidKeyword)),
-                            Identifier(used))
-                        .WithModifiers(
-                            TokenList(
-                                Token(SyntaxKind.PublicKeyword)))
-                        .WithExpressionBody(
-                            ArrowExpressionClause(
-                                        InvocationExpression(
-                                            MemberAccessExpression(
-                                                SyntaxKind.SimpleMemberAccessExpression,
-                                                IdentifierName(stateMachineAttribute.StateMachineStatePropertyName),
-                                                IdentifierName(nameof(StateMachineState<object, object, object>.ChangeState))))
-                                        .WithArgumentList(
-                                            ArgumentList(
-                                                SingletonSeparatedList<ArgumentSyntax>(
-                                                    Argument(
-                                                        MemberAccessExpression(
-                                                            SyntaxKind.SimpleMemberAccessExpression,
-                                                            IdentifierName(transitionType.Name),
-                                                            IdentifierName(used))))))))
-                                                            .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-                ;
-
-                c = c.AddMembers(md);
-            }
-            c = AddStateMachineProperty(c, stateMachineAttribute);
-
-            //foreach (var used in usedStates)
-            //{
-            //    var md = MethodDeclaration(
-            //                PredefinedType(
-            //                    Token(SyntaxKind.VoidKeyword)),
-            //                Identifier(used))
-            //            .WithModifiers(
-            //                TokenList(
-            //                    Token(SyntaxKind.PublicKeyword)))
-            //            .WithExpressionBody(
-            //                ArrowExpressionClause(
-            //                            //SingletonList<StatementSyntax>(
-            //                            //    ExpressionStatement(
-            //                            InvocationExpression(
-            //                                MemberAccessExpression(
-            //                                    SyntaxKind.SimpleMemberAccessExpression,
-            //                                    IdentifierName("stateMachine"),
-            //                                    IdentifierName("ChangeState")))
-            //                            .WithArgumentList(
-            //                                ArgumentList(
-            //                                    SingletonSeparatedList<ArgumentSyntax>(
-            //                                        Argument(
-            //                                            MemberAccessExpression(
-            //                                                SyntaxKind.SimpleMemberAccessExpression,
-            //                                                IdentifierName(transitionType.Name),
-            //                                                IdentifierName(used))))))))
-            //                                                //))
-            //                                                .WithSemicolonToken(Token(SyntaxKind.SemicolonToken))
-            //    ;
-            //    c = c.AddMembers(md);
-
-            //}
-            //NamespaceDeclarationSyntax ns = NamespaceDeclaration(IdentifierName(typeInfo.Type.ContainingNamespace.Name));
-            //cu = cu.AddMembers(ns);
-
-            //ClassDeclarationSyntax c = ClassDeclaration(typeInfo.Type.Name)
-            //    //.AddModifiers(Token(SyntaxKind.PrivateKeyword))
-            //    .AddModifiers(Token(SyntaxKind.PartialKeyword))
-            //    ;
-            //ns = ns.AddMembers(c);
 
             c = AddLog(c);
 

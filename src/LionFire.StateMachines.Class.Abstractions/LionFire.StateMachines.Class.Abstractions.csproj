@@ -7,9 +7,9 @@
     <Description>Attributes for describing state machine states and transitions.  Can be used to auto-generate state machines by using the LionFire.StateMachines.Class.Generation package.</Description>
     <Copyright>Jared Thirsk</Copyright>
     <PackageProjectUrl>http://open.lionfire.software</PackageProjectUrl>
-    <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <FileVersion>1.0.0.0</FileVersion>
-    <Version>2.0.0</Version>
+    <!--<AssemblyVersion>2.0.1.0</AssemblyVersion>
+    <FileVersion>2.0.1.0</FileVersion>
+    <Version>2.0.1</Version>-->
   </PropertyGroup>
 
 </Project>
