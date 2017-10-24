@@ -4,7 +4,7 @@ using System.Text;
 
 namespace LionFire.StateMachines
 {
-    public class InvalidFromStateException : StateMachineException
+    public class InvalidFromStateException : TransitionNotAllowedException
     {
         public InvalidFromStateException() { }
         public InvalidFromStateException(string message) : base(message) { }

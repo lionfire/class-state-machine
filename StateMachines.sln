@@ -3,19 +3,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
 VisualStudioVersion = 15.0.26730.16
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class", "src\LionFire.StateMachines.Class\LionFire.StateMachines.Class.csproj", "{DC128BD5-0722-4929-B28B-21E03029E013}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines", "src\LionFire.StateMachines\LionFire.StateMachines.csproj", "{DC128BD5-0722-4929-B28B-21E03029E013}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Generation", "src\LionFire.StateMachines.Class.Generation\LionFire.StateMachines.Class.Generation.csproj", "{CDF4C9A7-4DA6-4549-A7F3-422FEB2FC5F3}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Generation", "src\LionFire.StateMachines.Generation\LionFire.StateMachines.Generation.csproj", "{CDF4C9A7-4DA6-4549-A7F3-422FEB2FC5F3}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests", "test\LionFire.StateMachines.Class.Tests\LionFire.StateMachines.Class.Tests.csproj", "{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Tests", "test\LionFire.StateMachines.Tests\LionFire.StateMachines.Tests.csproj", "{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests.Model", "test\LionFire.StateMachines.Class.Tests.Model\LionFire.StateMachines.Class.Tests.Model.csproj", "{29C9D514-707F-475F-808B-4912BAFB05FE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Tests.Model", "test\LionFire.StateMachines.Tests.Model\LionFire.StateMachines.Tests.Model.csproj", "{29C9D514-707F-475F-808B-4912BAFB05FE}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Abstractions", "src\LionFire.StateMachines.Class.Abstractions\LionFire.StateMachines.Class.Abstractions.csproj", "{DBAED150-40F4-4360-BE7E-970D42E471EF}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Abstractions", "src\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj", "{DBAED150-40F4-4360-BE7E-970D42E471EF}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{7324923F-DEB4-45F2-8FE1-380B518D2F49}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Class.Tests.ExternalModel", "test\LionFire.StateMachines.Class.Tests.ExternalModel\LionFire.StateMachines.Class.Tests.ExternalModel.csproj", "{E365F69D-7657-49FA-931A-E05E0585A753}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Tests.ExternalModel", "test\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj", "{E365F69D-7657-49FA-931A-E05E0585A753}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

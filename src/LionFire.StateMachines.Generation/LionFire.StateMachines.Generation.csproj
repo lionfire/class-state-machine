@@ -18,12 +18,12 @@
 
   <ItemGroup>
     <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.11" />
-    <PackageReference Include="Microsoft.Extensions.DependencyModel" Version="2.0.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LionFire.StateMachines.Class\LionFire.StateMachines.Class.csproj" />
+    <ProjectReference Include="..\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
+    <ProjectReference Include="..\LionFire.StateMachines\LionFire.StateMachines.csproj" />
   </ItemGroup>
 
 </Project>

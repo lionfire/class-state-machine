@@ -7,15 +7,12 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Runtime.Loader;
-using System.Diagnostics;
 using LionFire.ExtensionMethods.CodeAnalysis;
-using Microsoft.Extensions.DependencyModel;
 
 namespace LionFire.StateMachines.Class.Generation
 {
@@ -28,7 +25,6 @@ namespace LionFire.StateMachines.Class.Generation
             Requires.NotNull(attributeData, nameof(attributeData));
             this.attributeData = attributeData;
 
-
             AssemblyLoadContext.Default.Resolving += Default_Resolving;
         }
 
@@ -37,7 +33,6 @@ namespace LionFire.StateMachines.Class.Generation
             Log("Resolving - " + arg2);
             return null;
         }
-
 
         public static HashSet<string> DefaultAfterPrefixes = new HashSet<string>()
             {
@@ -438,7 +433,7 @@ namespace LionFire.StateMachines.Class.Generation
                                                 MemberAccessExpression(
                                                     SyntaxKind.SimpleMemberAccessExpression,
                                                     IdentifierName(stateMachineAttribute.StateMachineStatePropertyName),
-                                                    IdentifierName(nameof(StateMachineState<object, object, object>.ChangeState))))
+                                                    IdentifierName(nameof(StateMachineState<object, object, object>.Transition))))
                                             .WithArgumentList(
                                                 ArgumentList(
                                                     SingletonSeparatedList<ArgumentSyntax>(
