@@ -22,7 +22,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
     <ProjectReference Include="..\LionFire.StateMachines\LionFire.StateMachines.csproj" />
   </ItemGroup>
 

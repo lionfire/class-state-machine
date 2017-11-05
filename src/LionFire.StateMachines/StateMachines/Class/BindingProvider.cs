@@ -76,10 +76,11 @@ namespace LionFire.StateMachines.Class
             if (transitions.ContainsKey(transition)) return transitions[transition];
 
             var fi = typeof(TTransition).GetField(transition.ToString());
+            if (fi == null) throw new ArgumentException($"Enum field for {typeof(TTransition).Name} value {transition} not found.");
             var aTransition = fi.GetCustomAttribute<TransitionAttribute>();
 
-            var fromInfo = GetStateBinding((TState)aTransition.From);
-            var toInfo = GetStateBinding((TState)aTransition.To);
+            var fromInfo = aTransition.From != null ? GetStateBinding((TState)aTransition.From) : null;
+            var toInfo = aTransition.To != null ? GetStateBinding((TState)aTransition.To) : null;
 
             var binding = new TransitionBinding<TState, TTransition, TOwner>(transition)
             {
@@ -158,7 +159,7 @@ namespace LionFire.StateMachines.Class
                 return null;
             }
         }
-        private Func<TOwner, IStateChange<TState, TTransition>,bool?> GetHandlerFunc(MethodInfo mi)
+        private Func<TOwner, IStateChange<TState, TTransition>, bool?> GetHandlerFunc(MethodInfo mi)
         {
             if (mi == null) return null;
             var param = mi.GetParameters();

@@ -36,4 +36,8 @@ namespace LionFire.StateMachines
         event StateChangeEventHandler<TState, TTransition> StateChangeAborted;
     }
 
+    public interface IAsyncStateMachine<TState, TTransition> : IStateMachine<TState, TTransition>
+    {
+        Task BeginTransition(TTransition transition, object context = null);
+    }
 }

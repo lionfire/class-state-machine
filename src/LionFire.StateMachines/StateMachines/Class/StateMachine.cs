@@ -30,9 +30,10 @@ namespace LionFire.StateMachines.Class
 
         #region Factory
 
-        public static IStateMachine<TState, TTransition> Create<TOwner>(TOwner owner)
+        public static IStateMachine<TState, TTransition> Create(object owner)
         {
-            return new StateMachineState<TState, TTransition, TOwner>(owner);
+            var type = typeof(StateMachineState<,,>).MakeGenericType(typeof(TState), typeof(TTransition), owner.GetType());
+            return (IStateMachine<TState, TTransition>)Activator.CreateInstance(type, new object[] { owner });
         }
 
         #endregion
@@ -53,7 +54,7 @@ namespace LionFire.StateMachines.Class
             foreach (var mi in typeof(TTransition).GetFields())
             {
                 var attr = mi.GetCustomAttribute<TransitionAttribute>();
-                if (attr != null && attr.From == null && attr.To != null && attr.From is TState startingState)
+                if (attr != null && attr.From == null && attr.To != null && attr.To is TState startingState)
                 {
                     StartingState = startingState;
                     StartingTransition = (TTransition)mi.GetValue(null); // UNTESTED
@@ -64,7 +65,7 @@ namespace LionFire.StateMachines.Class
             foreach (var mi in typeof(TTransition).GetFields())
             {
                 var attr = mi.GetCustomAttribute<TransitionAttribute>();
-                if (attr != null && attr.To == null && attr.From != null && attr.To is TState endingState)
+                if (attr != null && attr.To == null && attr.From != null && attr.From is TState endingState)
                 {
                     // NOTE: Only the first ending transition will be used.  ENH: Validate there is only one ending transition (and end state)
                     EndingState = endingState;

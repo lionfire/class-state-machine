@@ -21,6 +21,7 @@ namespace LionFire.StateMachines
         /// If the state change is cancelable, use this to cancel.  If not cancelable, this will return null.
         /// </summary>
         CancellationTokenSource CancellationTokenSource { get; }
+        bool IsCanceled { get; }
 
         List<object> FailureReasons { get; set; }
     }

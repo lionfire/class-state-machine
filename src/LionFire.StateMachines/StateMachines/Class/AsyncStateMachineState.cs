@@ -1,4 +1,5 @@
-﻿using System;
+﻿#if false // TODO: Re-copy from StateMachineState.cs
+using System;
 using System.Linq;
 using System.Collections.Generic;
 using System.Threading;
@@ -7,8 +8,11 @@ using System.Threading.Tasks;
 namespace LionFire.StateMachines.Class
 {
 
-    public class StateMachineState<TState, TTransition, TOwner> : IStateMachine<TState, TTransition>
+    [Obsolete("Not implemented yet")]
+    public class AsyncStateMachineState<TState, TTransition, TOwner> : IAsyncStateMachine<TState, TTransition>
+        
     {
+
         #region Relationships
 
         public TOwner Owner { get; private set; }
@@ -17,20 +21,13 @@ namespace LionFire.StateMachines.Class
 
         #region (Static)
 
-        internal readonly static StateChange<TState, TTransition, TOwner> startingLastStateChange;
-
-        static StateMachineState()
-        {
-            var startingTransition = StateMachine<TState, TTransition>.StartingTransition;
-            var startingTransitionBinding = BindingProvider<TState, TTransition, TOwner>.Default.GetTransitionBinding(startingTransition);
-            startingLastStateChange = new StateChange<TState, TTransition, TOwner>(StateMachine<TState, TTransition>.StartingTransition);
-        }
+        internal  static StateChange<TState, TTransition, TOwner> startingLastStateChange => StateMachineState<TState, TTransition, TOwner>.startingLastStateChange;
 
         #endregion
 
         #region Construction
 
-        public StateMachineState(TOwner owner = default(TOwner))
+        public AsyncStateMachineState(TOwner owner = default(TOwner))
         {
             //if (owner == null) throw new ArgumentNullException(nameof(owner));
             this.Owner = owner;
@@ -65,13 +62,51 @@ namespace LionFire.StateMachines.Class
 
         #endregion
 
+        //        public Task ChangeStateAsync(StateTransitionTypeBinding<TState, TTransition, TOwner> transitionBinding, object context = null)
+        //        {
+        //            ChangeState_CheckAlready(transitionBinding, context);
+
+        //            throw new NotImplementedException();
+        //            //return Task.CompletedTask;
+        //        }
+
+        //        private bool? ChangeState_CheckAlready(StateTransitionTypeBinding<TState, TTransition, TOwner> transitionBinding, object context = null)
+        //        {
+        //#error todo
+        //            if (currentState.Equals(transitionBinding.Info.From))
+        //            {
+        //                return false;
+        //            }
+        //            else
+        //            {
+        //                if (currentState.Equals(transitionBinding.Info.To))
+        //                {
+        //                    if (LastTransition.Transition.Info.Id.Equals(transitionBinding.Info.Id)
+        //                        && LastTransition.context == context)
+        //                    {
+        //                        // Okay, if transition is Last transition, and context == Last transition context, and this transition is idempotent (assumed true by default) 
+        //                        return true;
+        //                    }
+        //                    return true;
+        //                }
+        //            }
+
+        //        }
+        //        private void ChangeState_ValidateNotAlready(StateTransitionTypeBinding<TState, TTransition, TOwner> transitionBinding, object context = null)
+        //        {
+        //#error todo
+        //            throw new StateMachineException($"Transition {transitionBinding.Info.Id} ({transitionBinding.Info.From} -> {transitionBinding.Info.To}) not valid from state {currentState}");
+        //        }
+
         public IEnumerable<object> CannotChangeStateReasons(TTransition transition, object context = null)
         {
             lock (lockObject)
             {
                 // SIMILAR: ChangeState/TryChangeState 
                 var stateChange = new StateChange<TState, TTransition, TOwner>(transition, context);
-                // IsPreviewOnly = true, // FUTURE?  Could it do any good to indicate this?
+                //{
+                //    // IsPreviewOnly = true, // FUTURE?  Could it do any good to indicate this?
+                //};
 
                 var reasons = CannotChangeStateReasons(stateChange);
                 return reasons;
@@ -98,28 +133,19 @@ namespace LionFire.StateMachines.Class
             }
         }
 
+        public Task BeginTransition(TTransition transition, object context = null)
+        {
+            throw new NotImplementedException();
+        }
         public void Transition(TTransition transition, object context = null)
         {
-            // SIMILAR: See also - TryChangeState for similar code
-            lock (lockObject)
-            {
-                var stateChange = new StateChange<TState, TTransition, TOwner>(transition, context);
-
-                var reasons = CannotChangeStateReasons(stateChange);
-                if (reasons.Any()) throw new CannotChangeStateException(reasons);
-
-                DoTransition(stateChange);
-
-                if (stateChange.CancellationTokenSource != null && stateChange.CancellationTokenSource.IsCancellationRequested)
-                {
-                    throw new StateChangeCanceledException();
-                }
-            }
+            BeginTransition(transition, context).ConfigureAwait(false).GetAwaiter().GetResult(); // REVIEW the wait
         }
 
         #region (Private)
 
         private object lockObject = new object();
+
         internal IEnumerable<object> CannotChangeStateReasons(StateChange<TState, TTransition, TOwner> stateChange, bool quitOnFirstReason = false)
         {
             lock (lockObject)
@@ -161,10 +187,29 @@ namespace LionFire.StateMachines.Class
             }
         }
 
+        internal void Transition(TransitionBinding<TState, TTransition, TOwner> transitionBinding, object context = null)
+        {
+            // SIMILAR: See also - TryChangeState for similar code
+            lock (lockObject)
+            {
+                var stateChange = new StateChange<TState, TTransition, TOwner>
+                {
+                    TransitionBinding = transitionBinding,
+                    Context = context,
+                };
 
+                var reasons = CannotChangeStateReasons(stateChange);
+                if (reasons.Any()) throw new CannotChangeStateException(reasons);
 
+                DoTransition(stateChange);
+                if (stateChange.CancellationTokenSource.IsCancellationRequested)
+                {
+                    throw new StateChangeAbortedException();
+                }
+            }
+        }
 
-        private void DoTransition(StateChange<TState, TTransition, TOwner> stateChange, object context = null)
+        private void DoTransition(StateChange<TState, TTransition, TOwner> stateChange)
         {
             TransitionBinding<TState, TTransition, TOwner> transitionBinding = stateChange.TransitionBinding;
 
@@ -172,25 +217,30 @@ namespace LionFire.StateMachines.Class
 
             StateChanging?.Invoke(stateChange);
 
-            if (!stateChange.IsCanceled && transitionBinding.From?.OnLeaving != null) transitionBinding.From?.OnLeaving(Owner, stateChange);
-            if (!stateChange.IsCanceled && transitionBinding.OnTransitioning != null) transitionBinding.OnTransitioning(Owner, stateChange);
-            if (!stateChange.IsCanceled && transitionBinding.From?.OnEntering != null) transitionBinding.To?.OnEntering(Owner, stateChange);
-
-            if (stateChange.IsCanceled)
+            if (stateChange.CancellationTokenSource != null)
             {
-                try
+                if (!stateChange.CancellationTokenSource.IsCancellationRequested) transitionBinding.From?.OnLeaving(Owner, stateChange);
+                if (!stateChange.CancellationTokenSource.IsCancellationRequested) transitionBinding.OnTransitioning(Owner, stateChange);
+                if (!stateChange.CancellationTokenSource.IsCancellationRequested) transitionBinding.To?.OnEntering(Owner, stateChange);
+
+                if (stateChange.CancellationTokenSource.IsCancellationRequested)
                 {
-                    StateChangeAborted?.Invoke(stateChange);
-                }
-                catch (Exception)
-                {
-                    throw;
-                    // FUTURE: exception handling, and be sure to return.
-                    //return;
+                    try
+                    {
+                        StateChangeAborted?.Invoke(stateChange);
+                    }
+                    catch (Exception)
+                    {
+                        throw;
+                        // FUTURE: exception handling, and be sure to return.
+                        //return;
+                    }
                 }
             }
-            lastStateChange = new StateChange<TState, TTransition, TOwner>(transitionBinding.Info.Id, context);
-
+            lastStateChange = new StateChange<TState, TTransition, TOwner>
+            {
+                Transition = transitionBinding.Info.Id
+            };
             StateChanged?.Invoke(stateChange);
         }
 
@@ -226,3 +276,4 @@ namespace LionFire.StateMachines.Class
 
 #endif
 }
+#endif
