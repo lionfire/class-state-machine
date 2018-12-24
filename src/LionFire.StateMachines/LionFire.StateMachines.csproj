@@ -8,7 +8,7 @@
     <Version>2.0.1</Version>
 	<AssemblyVersion>2.0.1.0</AssemblyVersion>-->
     <!--<VersionPrefix>1.0.1</VersionPrefix>-->
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>LionFire</RootNamespace>
     
   </PropertyGroup>

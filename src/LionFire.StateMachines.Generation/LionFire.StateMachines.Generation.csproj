@@ -1,11 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
 <PackageTargetFallback>$(PackageTargetFallback);portable-net45+win8+wp8+wpa81;</PackageTargetFallback>
 <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
 <Description>Auto-generate a class that implements a state machine.  Currently depends on LionFire.StateMachines.Class to run, and LionFire.StateMachines.Class.Attributes to describe state and transition enum fields.</Description>
 <Copyright>Jared Thirsk</Copyright>
 <PackageProjectUrl>http://open.lionfire.software</PackageProjectUrl>
+<PackageLicenseUrl />
 <!--<Version>2.0.1</Version>
 <AssemblyVersion>2.0.1</AssemblyVersion>
 <FileVersion>2.0.1</FileVersion>-->
@@ -17,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.11" />
+    <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.88" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 

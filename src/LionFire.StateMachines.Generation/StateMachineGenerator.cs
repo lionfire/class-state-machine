@@ -93,8 +93,8 @@ namespace LionFire.StateMachines.Class.Generation
 
         public async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
-            if (context.ProcessingMember == null) throw new ArgumentNullException("context.ProcessingMember");
-            var dClass = (ClassDeclarationSyntax)context.ProcessingMember;
+            if (context.ProcessingNode == null) throw new ArgumentNullException("context.ProcessingMember");
+            var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
 
             var typeInfo = context.SemanticModel.GetTypeInfo(dClass);
             //try
@@ -281,7 +281,7 @@ namespace LionFire.StateMachines.Class.Generation
             ClassDeclarationSyntax c = null;
             try
             {
-                var dClass = (ClassDeclarationSyntax)context.ProcessingMember;
+                var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
                 c = ClassDeclaration(dClass.Identifier).AddModifiers(Token(SyntaxKind.PartialKeyword));
                 StateMachineAttribute stateMachineAttribute;
 

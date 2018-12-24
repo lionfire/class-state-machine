@@ -6,12 +6,12 @@ namespace LionFire.Execution
     [Flags]
     public enum ExecutionState : int
     {
-        [Start]
+      //  [Start]
         Uninitialized = 1 << 0,
         Ready = 1 << 1,
         Running = 1 << 2,
         Finished = 1 << 3,
-        [End]
+//[End]
         Disposed = 1 << 4,
     }
 }

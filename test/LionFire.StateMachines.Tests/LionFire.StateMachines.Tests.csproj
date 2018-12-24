@@ -11,8 +11,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\LionFire.StateMachines.Class\LionFire.StateMachines.Class.csproj" />
-    <ProjectReference Include="..\LionFire.StateMachines.Class.Tests.Model\LionFire.StateMachines.Class.Tests.Model.csproj" />
+    <ProjectReference Include="..\..\src\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\LionFire.StateMachines\LionFire.StateMachines.csproj" />
+    <ProjectReference Include="..\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj" />
+    <ProjectReference Include="..\LionFire.StateMachines.Tests.Model\LionFire.StateMachines.Tests.Model.csproj" />
   </ItemGroup>
 
   <ItemGroup>
