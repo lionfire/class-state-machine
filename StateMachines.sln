@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.28407.52
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines", "src\LionFire.StateMachines\LionFire.StateMachines.csproj", "{DC128BD5-0722-4929-B28B-21E03029E013}"
 EndProject
@@ -32,11 +32,9 @@ Global
 		{CDF4C9A7-4DA6-4549-A7F3-422FEB2FC5F3}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CDF4C9A7-4DA6-4549-A7F3-422FEB2FC5F3}.Release|Any CPU.Build.0 = Release|Any CPU
 		{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{272C9B29-20F5-4AEC-A4FE-14AFF4F46126}.Release|Any CPU.Build.0 = Release|Any CPU
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{29C9D514-707F-475F-808B-4912BAFB05FE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{29C9D514-707F-475F-808B-4912BAFB05FE}.Release|Any CPU.Build.0 = Release|Any CPU
 		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
@@ -44,7 +42,6 @@ Global
 		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{DBAED150-40F4-4360-BE7E-970D42E471EF}.Release|Any CPU.Build.0 = Release|Any CPU
 		{E365F69D-7657-49FA-931A-E05E0585A753}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{E365F69D-7657-49FA-931A-E05E0585A753}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E365F69D-7657-49FA-931A-E05E0585A753}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E365F69D-7657-49FA-931A-E05E0585A753}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
