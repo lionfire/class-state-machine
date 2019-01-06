@@ -61,10 +61,12 @@ namespace LionFire.StateMachines.Class
 
             var binding = new StateBinding<TState, TTransition, TOwner>(state)
             {
-                CanEnter = GetHandlerFunc(GetMethod(state, Conventions.CanEnterStatePrefixes)),
-                CanLeave = GetHandlerFunc(GetMethod(state, Conventions.CanLeaveStatePrefixes)),
-                OnEntering = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes)),
-                OnLeaving = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes)),
+                // TODO for can enter / leave: also filter based on return type of (bool?)?
+                CanEnter = GetHandlerFunc(GetMethod(state, Conventions.CanEnterStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
+                CanLeave = GetHandlerFunc(GetMethod(state, Conventions.CanLeaveStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
+
+                OnEntering = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
+                OnLeaving = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
             };
 
             states.Add(state, binding);
@@ -86,7 +88,7 @@ namespace LionFire.StateMachines.Class
             {
                 Info = StateMachine<TState, TTransition>.GetTransitionInfo(transition),
                 CanTransition = GetHandlerFunc(GetMethod(transition, Conventions.CanTransitionPrefixes)),
-                OnTransitioning = GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method)),
+                OnTransitioning = GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method, TransitioningHandlerMethodParameterTypes)),
                 From = fromInfo,
                 To = toInfo,
             };
@@ -97,22 +99,44 @@ namespace LionFire.StateMachines.Class
 
         #endregion
 
+        private static readonly Type[] TransitioningHandlerMethodParameterTypes = new Type[] { typeof(TOwner), typeof(StateChange<TState, TTransition, TOwner>) };
+
         #region (Private) Helper Methods
 
-        private MethodInfo GetMethod(TTransition transition, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any)
+        private MethodInfo GetMethod(TTransition transition, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any, Type[] methodParameterTypes = null)
         {
-            return _GetMethod(transition.ToString(), prefixes, memberType);
+            return _GetMethod(transition.ToString(), prefixes, memberType, methodParameterTypes);
         }
-        private MethodInfo GetMethod(TState state, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any)
+        private MethodInfo GetMethod(TState state, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any, Type[] methodParameterTypes = null)
         {
-            return _GetMethod(state.ToString(), prefixes, memberType);
+            return _GetMethod(state.ToString(), prefixes, memberType, methodParameterTypes);
         }
 
-        private MethodInfo _GetMethod(string stateOrTransitionName, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any)
+        private MethodInfo _GetMethod(string stateOrTransitionName, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any, Type[] methodParameterTypes = null)
         {
             if (memberType.HasFlag(MemberType.Method))
             {
-                if (methods == null) methods = typeof(TOwner).GetMethods(MethodBindingFlags).ToDictionary(fi => fi.Name);
+                if (methods == null)
+                {
+                    IEnumerable<MethodInfo> list = typeof(TOwner).GetMethods(MethodBindingFlags);
+                    if(methodParameterTypes != null)
+                    {
+                        list = list.Where(mi =>
+                        {
+                            var parameters = mi.GetParameters();
+                            if (parameters.Length != methodParameterTypes.Length) return false;
+
+                            int i = 0;
+                            foreach (var type in methodParameterTypes)
+                            {
+                                if (type != parameters[i].ParameterType) return false;
+                                i++;
+                            }
+                            return true;
+                        });
+                    }
+                    methods = list.ToDictionary(fi => fi.Name);
+                }
 
                 foreach (var prefix in prefixes)
                 {
