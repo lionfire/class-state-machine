@@ -22,6 +22,8 @@ namespace LionFire.StateMachines.Class.Generation
 
         public StateMachineGenerator(AttributeData attributeData)
         {
+            Log("Created generator");
+            throw new Exception("throw test ctor");
             Requires.NotNull(attributeData, nameof(attributeData));
             this.attributeData = attributeData;
 
@@ -86,6 +88,7 @@ namespace LionFire.StateMachines.Class.Generation
         //[Conditional("DEBUG")]
         public void Log(string msg = null)
         {
+            Console.WriteLine(msg);
             logEntries.Add(msg);
         }
 
@@ -93,6 +96,7 @@ namespace LionFire.StateMachines.Class.Generation
 
         public async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
+            throw new Exception("throw test in method");
             if (context.ProcessingNode == null) throw new ArgumentNullException("context.ProcessingMember");
             var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
 

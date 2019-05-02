@@ -27,14 +27,14 @@ namespace LionFire.StateMachines.Class.Tests
 
         #region StateBinding
 
-        [Fact]
-        public void StateBinding()
-        {
-            var binding = StateInfoProvider<ExecutionState, ExecutionTransition, GeneratedExecutable>.Default.GetStateTypeBinding(ExecutionState.Ready);
+        //[Fact]
+        //public void StateBinding()
+        //{
+        //    var binding = StateInfoProvider<ExecutionState, ExecutionTransition, GeneratedExecutable>.Default.GetStateTypeBinding(ExecutionState.Ready);
 
-            //Assert.NotNull(binding.CanEnter);
-            //Assert.NotNull(binding.CanLeave);
-        }
+        //    //Assert.NotNull(binding.CanEnter);
+        //    //Assert.NotNull(binding.CanLeave);
+        //}
 
         #endregion
 
