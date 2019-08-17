@@ -17,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeGeneration.Roslyn" Version="0.4.88" />
+    <PackageReference Include="CodeGeneration.Roslyn" Version="0.5.13" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
   </ItemGroup>
 
