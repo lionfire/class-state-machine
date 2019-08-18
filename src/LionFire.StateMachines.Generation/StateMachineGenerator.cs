@@ -16,6 +16,9 @@ using LionFire.ExtensionMethods.CodeAnalysis;
 
 namespace LionFire.StateMachines.Class.Generation
 {
+    // TIP: Use http://roslynquoter.azurewebsites.net/ for generating new code
+
+
     public class StateMachineGenerator : ICodeGenerator
     {
         AttributeData attributeData;
@@ -23,7 +26,6 @@ namespace LionFire.StateMachines.Class.Generation
         public StateMachineGenerator(AttributeData attributeData)
         {
             Log("Created generator");
-            throw new Exception("throw test ctor");
             Requires.NotNull(attributeData, nameof(attributeData));
             this.attributeData = attributeData;
 
@@ -83,7 +85,7 @@ namespace LionFire.StateMachines.Class.Generation
         const string unusedIndicator = " - ";
         const string usedIndicator = " * ";
 
-        #region Log
+#region Log
 
         //[Conditional("DEBUG")]
         public void Log(string msg = null)
@@ -92,11 +94,10 @@ namespace LionFire.StateMachines.Class.Generation
             logEntries.Add(msg);
         }
 
-        #endregion
+#endregion
 
         public async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
-            throw new Exception("throw test in method");
             if (context.ProcessingNode == null) throw new ArgumentNullException("context.ProcessingMember");
             var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
 
@@ -499,7 +500,8 @@ namespace LionFire.StateMachines.Class.Generation
             {
                 if (c != null)
                 {
-                    Log("Unhandled exception: " + ex);
+                    Log("#error Code generation resulted in an exception.  See code generation file for details.");
+                    Log("Unhandled exception: " + ex.ToString().Replace(Environment.NewLine, Environment.NewLine + " // "));
                 }
                 else
                 {
@@ -570,7 +572,7 @@ namespace LionFire.StateMachines.Class.Generation
                                                                                     IdentifierName("TS"), // TODO
                                                                                     Token(SyntaxKind.CommaToken),
                                                                                     IdentifierName("ExecutionTransition")}))),// TODO
-                                                                    IdentifierName("CreateState")))
+                                                                    IdentifierName("Create")))
                                                             .WithArgumentList(
                                                                 ArgumentList(
                                                                     SingletonSeparatedList<ArgumentSyntax>(
@@ -608,9 +610,20 @@ namespace LionFire.StateMachines.Class.Generation
                 Comment(prefix + " Generated on " + DateTime.Now.ToString()),
                 Comment(prefix)
             }
-                    .Concat(logEntries.Select(m => Comment(prefix + (m ?? ""))))
+               .Concat(logEntries.Select(m => (m??"").StartsWith("#error") 
+            ? Trivia(ErrorDirectiveTrivia(true)
+                .WithEndOfDirectiveToken(
+                                Token(
+                                    TriviaList(
+                                        PreprocessingMessage(m.Substring("#error".Length))),
+                                    SyntaxKind.EndOfDirectiveToken,
+                                    TriviaList()))
+                )
+
+            : Comment(prefix + (m ?? "")))
+                    //.Concat(logEntries.Select(m => Comment(prefix + (m ?? ""))))
                     .Concat(new SyntaxTrivia[] { Comment(prefix) })
-                    .ToArray();
+                    .ToArray());
 
             return c.WithCloseBraceToken(
             Token(TriviaList(output),

@@ -14,6 +14,7 @@ namespace LionFire.StateMachines.Class.Tests
 
         #region TransitionBinding
 
+#if TODO // Where did this code go?
         [Fact]
         public void TransitionBinding()
         {
@@ -22,6 +23,7 @@ namespace LionFire.StateMachines.Class.Tests
             Assert.NotNull(binding.CanTransitionMethod);
             Assert.Equal("get_CanInitialize", binding.CanTransitionMethod.Name);
         }
+#endif
 
         #endregion
 
@@ -65,7 +67,7 @@ namespace LionFire.StateMachines.Class.Tests
         {
             var te = new GeneratedExecutable();
 
-            Assert.True(te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.True(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Ready, te.StateMachine.CurrentState);
         }
@@ -76,7 +78,7 @@ namespace LionFire.StateMachines.Class.Tests
             var te = new GeneratedExecutable();
             te.ReadyPrereq = false;
 
-            Assert.False(te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.False(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Uninitialized, te.StateMachine.CurrentState);
         }
@@ -84,6 +86,7 @@ namespace LionFire.StateMachines.Class.Tests
         #endregion
         #region CanLeave
 
+        [Fact]
         public void LeavePrereq()
         {
             var te = new GeneratedExecutable();
@@ -108,7 +111,7 @@ namespace LionFire.StateMachines.Class.Tests
         {
             var te = new GeneratedExecutable();
 
-            Assert.Equal(true, te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.True(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Ready, te.StateMachine.CurrentState);
         }
@@ -119,12 +122,13 @@ namespace LionFire.StateMachines.Class.Tests
             var te = new GeneratedExecutable();
             te.LeaveUninitializedPrereq = false;
 
-            Assert.Equal(false, te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.False(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Uninitialized, te.StateMachine.CurrentState);
         }
 
         #endregion
+
         #region CanTransition
 
         [Fact]
@@ -152,7 +156,7 @@ namespace LionFire.StateMachines.Class.Tests
         {
             var te = new GeneratedExecutable();
 
-            Assert.Equal(true, te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.True(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Ready, te.StateMachine.CurrentState);
         }
@@ -160,10 +164,12 @@ namespace LionFire.StateMachines.Class.Tests
         [Fact]
         public void TryTransitionFalse()
         {
-            var te = new GeneratedExecutable();
-            te.InitializePrereq = false;
+            var te = new GeneratedExecutable
+            {
+                InitializePrereq = false
+            };
 
-            Assert.Equal(false, te.StateMachine.TryChangeState(ExecutionTransition.Initialize));
+            Assert.False(te.StateMachine.TryTransition(ExecutionTransition.Initialize));
 
             Assert.Equal(ExecutionState.Uninitialized, te.StateMachine.CurrentState);
         }
@@ -174,7 +180,7 @@ namespace LionFire.StateMachines.Class.Tests
         public void Current_State_Flow()
         {
             var te = new GeneratedExecutable();
-            Assert.Equal(ExecutionState.Uninitialized,te.StateMachine.CurrentState);
+            Assert.Equal(ExecutionState.Uninitialized, te.StateMachine.CurrentState);
             te.Initialize();
             Assert.Equal(ExecutionState.Ready, te.StateMachine.CurrentState);
             te.Start();

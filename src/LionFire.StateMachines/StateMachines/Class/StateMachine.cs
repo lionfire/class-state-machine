@@ -30,10 +30,11 @@ namespace LionFire.StateMachines.Class
 
         #region Factory
 
-        public static IStateMachine<TState, TTransition> Create(object owner)
+        //public static IStateMachine<TState, TTransition> Create(object owner)
+        public static StateMachineState<TState, TTransition, TOwner> Create<TOwner>(TOwner owner)
         {
             var type = typeof(StateMachineState<,,>).MakeGenericType(typeof(TState), typeof(TTransition), owner.GetType());
-            return (IStateMachine<TState, TTransition>)Activator.CreateInstance(type, new object[] { owner });
+            return (StateMachineState<TState, TTransition, TOwner>)Activator.CreateInstance(type, new object[] { owner });
         }
 
         #endregion
@@ -61,6 +62,9 @@ namespace LionFire.StateMachines.Class
                     break;
                 }
             }
+
+            var defValue = typeof(TState).BaseType == typeof(Enum) ? (TState)(object) 0 : default(TState);
+            if (StartingState?.Equals(defValue) == true) throw new ArgumentException("StartingState missing.  There must be at least one Transition with a null From and a non-null To.");
 
             foreach (var mi in typeof(TTransition).GetFields())
             {

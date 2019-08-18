@@ -24,11 +24,7 @@ namespace LionFire.StateMachines.Class.Tests
             }
         }
 
-
-        public void OnInitialize()
-        {
-            Log("OnInitialize");
-        }
+        public void OnInitialize() => Log("OnInitialize");
 
         #region Leave Uninitialized
 
@@ -62,30 +58,15 @@ namespace LionFire.StateMachines.Class.Tests
                 return ReadyPrereq;
             }
         }
-        
+
         #endregion
 
-        public void OnReady()
-        {
-            Log("OnReady");
-        }
-        public void AfterReady()
-        {
-            Log("AfterReady");
-        }
-        public void OnStart()
-        {
-            Log("OnStart");
-        }
-        public void AfterComplete()
-        {
-            Log("AfterComplete");
-        }
+        public void OnReady() => Log("OnReady");
+        public void AfterReady() => Log("AfterReady");
+        public void OnStart() => Log("OnStart");
+        public void AfterComplete() => Log("AfterComplete");
 
-        public void OnFinished()
-        {
-            Log("OnFinished");
-        }
+        public void OnFinished() => Log("OnFinished");
 
         #region Log for testing
 

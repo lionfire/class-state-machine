@@ -66,12 +66,17 @@ namespace LionFire.StateMachines.Class
                 CanLeave = GetHandlerFunc(GetMethod(state, Conventions.CanLeaveStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
 
                 OnEntering = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
-                OnLeaving = GetHandlerAction(GetMethod(state, Conventions.EnteringStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
+                OnLeaving = GetHandlerAction(GetMethod(state, Conventions.LeavingStatePrefixes, methodParameterTypes: TransitioningHandlerMethodParameterTypes)),
             };
 
             states.Add(state, binding);
             return binding;
         }
+
+        //private Action<TOwner, IStateChange<TState, TTransition>> z(Action a)
+        //{
+        //    return new Action<TOwner, IStateChange<TState, TTransition>>((_owner, _transition) => a()));
+        //}
 
         internal TransitionBinding<TState, TTransition, TOwner> GetTransitionBinding(TTransition transition)
         {
@@ -88,7 +93,9 @@ namespace LionFire.StateMachines.Class
             {
                 Info = StateMachine<TState, TTransition>.GetTransitionInfo(transition),
                 CanTransition = GetHandlerFunc(GetMethod(transition, Conventions.CanTransitionPrefixes)),
-                OnTransitioning = GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method, TransitioningHandlerMethodParameterTypes)),
+                OnTransitioning = GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method)),
+                //OnTransitioning = GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method, TransitioningHandlerMethodParameterTypes))
+                //?? z(GetHandlerAction(GetMethod(transition, Conventions.OnTransitionPrefixes, MemberType.Method))),
                 From = fromInfo,
                 To = toInfo,
             };
@@ -99,7 +106,8 @@ namespace LionFire.StateMachines.Class
 
         #endregion
 
-        private static readonly Type[] TransitioningHandlerMethodParameterTypes = new Type[] { typeof(TOwner), typeof(StateChange<TState, TTransition, TOwner>) };
+        //private static readonly Type[] TransitioningHandlerMethodParameterTypes = new Type[] { typeof(TOwner), typeof(StateChange<TState, TTransition, TOwner>) };
+        private static readonly Type[] TransitioningHandlerMethodParameterTypes = null; // TODO?  
 
         #region (Private) Helper Methods
 
@@ -116,6 +124,7 @@ namespace LionFire.StateMachines.Class
         {
             if (memberType.HasFlag(MemberType.Method))
             {
+                methods = null;
                 if (methods == null)
                 {
                     IEnumerable<MethodInfo> list = typeof(TOwner).GetMethods(MethodBindingFlags);

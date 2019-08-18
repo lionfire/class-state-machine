@@ -5,7 +5,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <DotNetCliToolReference Include="dotnet-codegen" Version="0.4.88" />
+    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.6.1" PrivateAssets="All" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <DotNetCliToolReference Include="dotnet-codegen" Version="0.6.1" />
   </ItemGroup>
 
   
@@ -13,4 +17,5 @@
     <ProjectReference Include="..\..\src\LionFire.StateMachines.Generation\LionFire.StateMachines.Generation.csproj" />
     <ProjectReference Include="..\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj" />
   </ItemGroup>
+
 </Project>

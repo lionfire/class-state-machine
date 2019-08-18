@@ -9,6 +9,8 @@ namespace LionFire.Execution
     [Flags]
     public enum ExecutionTransition
     {
+        //Unspecified = 0,
+
         [Transition(TS.Uninitialized, TS.Ready)]
         Initialize = 1 << 1,
 
@@ -42,6 +44,10 @@ namespace LionFire.Execution
         Reset = 1 << 13,
         [Transition(TS.Finished, TS.Uninitialized)]
         Reuse = 1 << 14,
+
+        [Transition(null, TS.Uninitialized)]
+        Create = 1 << 15,
+
 
         Cancel = Deinitialize | Undo,
         End = Complete | Skip,

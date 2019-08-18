@@ -94,7 +94,7 @@ namespace LionFire.StateMachines.Class
                 if (reasons.Any()) return false;
 
                 DoTransition(stateChange);
-                return !stateChange.CancellationTokenSource.IsCancellationRequested;
+                return stateChange.CancellationTokenSource?.IsCancellationRequested != true;
             }
         }
 
@@ -174,7 +174,7 @@ namespace LionFire.StateMachines.Class
 
             if (!stateChange.IsCanceled && transitionBinding.From?.OnLeaving != null) transitionBinding.From?.OnLeaving(Owner, stateChange);
             if (!stateChange.IsCanceled && transitionBinding.OnTransitioning != null) transitionBinding.OnTransitioning(Owner, stateChange);
-            if (!stateChange.IsCanceled && transitionBinding.From?.OnEntering != null) transitionBinding.To?.OnEntering(Owner, stateChange);
+            if (!stateChange.IsCanceled && transitionBinding.To?.OnEntering != null) transitionBinding.To?.OnEntering(Owner, stateChange);
 
             if (stateChange.IsCanceled)
             {
