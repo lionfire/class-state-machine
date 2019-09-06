@@ -120,6 +120,11 @@ namespace LionFire.StateMachines.Class
             return _GetMethod(state.ToString(), prefixes, memberType, methodParameterTypes);
         }
 
+        private static HashSet<string> DefaultAllowedParameters = new HashSet<string>
+        {
+            typeof(IStateChange<TState,TTransition>).FullName,
+        };
+
         private MethodInfo _GetMethod(string stateOrTransitionName, IEnumerable<string> prefixes, MemberType memberType = MemberType.Any, Type[] methodParameterTypes = null)
         {
             if (memberType.HasFlag(MemberType.Method))
@@ -128,7 +133,7 @@ namespace LionFire.StateMachines.Class
                 if (methods == null)
                 {
                     IEnumerable<MethodInfo> list = typeof(TOwner).GetMethods(MethodBindingFlags);
-                    if(methodParameterTypes != null)
+                    if (methodParameterTypes != null)
                     {
                         list = list.Where(mi =>
                         {
@@ -142,6 +147,18 @@ namespace LionFire.StateMachines.Class
                                 i++;
                             }
                             return true;
+                        });
+                    }
+                    else
+                    {
+                        list = list.Where(mi =>
+                        {
+                            var parameters = mi.GetParameters();
+                            if (parameters.Length == 0) return true;
+                            if (parameters.Length > 2) return false;
+
+                            var parametersStringList = parameters.Select(p => p.ParameterType.FullName?? p.ParameterType.Name).Aggregate((x, y) => $"{x},{y}");
+                            return DefaultAllowedParameters.Contains(parametersStringList);
                         });
                     }
                     methods = list.ToDictionary(fi => fi.Name);
