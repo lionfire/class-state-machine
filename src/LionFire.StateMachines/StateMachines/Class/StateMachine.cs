@@ -33,7 +33,8 @@ namespace LionFire.StateMachines.Class
         //public static IStateMachine<TState, TTransition> Create(object owner)
         public static StateMachineState<TState, TTransition, TOwner> Create<TOwner>(TOwner owner)
         {
-            var type = typeof(StateMachineState<,,>).MakeGenericType(typeof(TState), typeof(TTransition), owner.GetType());
+            //var type = typeof(StateMachineState<,,>).MakeGenericType(typeof(TState), typeof(TTransition), owner.GetType());
+            var type = typeof(StateMachineState<,,>).MakeGenericType(typeof(TState), typeof(TTransition), typeof(TOwner));
             return (StateMachineState<TState, TTransition, TOwner>)Activator.CreateInstance(type, new object[] { owner });
         }
 
