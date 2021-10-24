@@ -97,4 +97,80 @@ namespace LionFire.StateMachines.Class.Tests
 
 
 
+
+#if ExpectedGeneratedOutput
+
+    public partial class GeneratedExecutable
+    {
+        public void Initialize() => StateMachine.Transition(ExecutionTransition.Initialize);
+        public void Start() => StateMachine.Transition(ExecutionTransition.Start);
+        public void Complete() => StateMachine.Transition(ExecutionTransition.Complete);
+        public StateMachineState<LionFire.Execution.ExecutionState, LionFire.Execution.ExecutionTransition, GeneratedExecutable> StateMachine
+        {
+            get
+            {
+                if (stateMachine == null)
+                {
+                    stateMachine = StateMachine<TS, ExecutionTransition>.Create(this);
+                }
+                return stateMachine;
+            }
+        }
+        private StateMachineState<TS, ExecutionTransition, GeneratedExecutable> stateMachine;
+
+        // 
+        //  Generated on 2021-10-24 8:26:17 AM
+        // 
+        // BaseDir: e:/Program Files/Microsoft Visual Studio/2022/Preview/MSBuild/Current/Bin/Roslyn
+        /// Compilation: 
+        //  - Source module name LionFire.StateMachines.Tests.Model.dll
+        //  - source module locations: SourceFile(C:/src/StateMachines/test/LionFire.StateMachines.Tests.Model/GeneratedExecutable.cs[0..3334)), SourceFile(C:/src/StateMachines/test/LionFire.StateMachines.Tests.Model/ManualExecutable.cs[5204..5204)), SourceFile(C:/src/StateMachines/test/../obj/LionFire.StateMachines.Tests.Model/Debug/netstandard2.0/.NETStandard,Version=v2.0.AssemblyAttributes.cs[22..191)), SourceFile(C:/src/StateMachines/test/../obj/LionFire.StateMachines.Tests.Model/Debug/netstandard2.0/LionFire.StateMachines.Tests.Model.AssemblyInfo.cs[407..1344))
+        // #r \"C:/src/StateMachines/bin/LionFire.StateMachines.Abstractions/Debug/netstandard2.0/LionFire.StateMachines.Abstractions.dll\"
+        // #r \"C:/src/StateMachines/bin/LionFire.StateMachines.Tests.ExternalModel/Debug/netstandard2.0/LionFire.StateMachines.Tests.ExternalModel.dll\"
+        // 
+        // Resolved LionFire.Execution.ExecutionState
+        // Resolved LionFire.Execution.ExecutionTransition
+        // 
+        // StateMachine: 
+        //  - StateType: LionFire.Execution.ExecutionState
+        //  - TransitionType: LionFire.Execution.ExecutionTransition
+        //  - Options: None
+        // 
+        //  - method OnInitialize() for Initialize
+        //  - method OnStart() for Start
+        //  - method AfterComplete() for Complete
+        //  - method AfterUninitialized() for state 'Uninitialized'
+        //  - method OnReady() for state 'Ready'
+        //  - method OnFinished() for state 'Finished'
+        // States:
+        //  * Uninitialized
+        //  * Ready
+        //  * Running
+        //  * Finished
+        //  - Disposed
+        // 
+        // Transitions:
+        //  * Initialize
+        //  - Invalidate
+        //  - Deinitialize
+        //  * Start
+        //  - Skip
+        //  - Noop
+        //  - Undo
+        //  * Complete
+        //  - Terminate
+        //  - Fail
+        //  - CleanUp
+        //  - Reset
+        //  - Reuse
+        //  - Create
+        //  - Cancel
+        //  - End
+        //  - Fault
+        //  - Dispose
+        // 
+        // }
+    }
+#endif
+
 }

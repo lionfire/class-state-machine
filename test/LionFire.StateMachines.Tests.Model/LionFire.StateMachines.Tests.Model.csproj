@@ -1,12 +1,13 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>net5.0</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
     <ProjectReference Include="..\..\src\LionFire.StateMachines.Generation\LionFire.StateMachines.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\..\src\LionFire.StateMachines\LionFire.StateMachines.csproj" />
     <ProjectReference Include="..\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj" />
   </ItemGroup>
 

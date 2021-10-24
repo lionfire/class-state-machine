@@ -10,10 +10,14 @@ using System.Threading;
 using System.Threading.Tasks;
 using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
-using System.Runtime.Loader;
+//using System.Runtime.Loader;
 using LionFire.ExtensionMethods.CodeAnalysis;
 using System.Text;
 using Microsoft.CodeAnalysis.Text;
+using System.Diagnostics;
+using System.Runtime.Serialization;
+using Microsoft.CodeAnalysis.CSharp.Formatting;
+//using Microsoft.CodeAnalysis.CSharp.Formatting;
 
 namespace LionFire.StateMachines.Class.Generation
 {
@@ -24,8 +28,11 @@ namespace LionFire.StateMachines.Class.Generation
         public ClassDeclarationSyntax ClassToAugment { get; private set; }
 
         // StateMachineAttribute
-        public AttributeSyntax Attribute { get; private set; }
+        public AttributeSyntax AttributeSyntax { get; private set; }
+        public AttributeData AttributeData { get; private set; }
 
+        public string Namespace { get; private set; }
+        public string FullyQualifiedTypeName { get; private set; }
         public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
             // Business logic to decide what we're interested in goes here
@@ -39,9 +46,11 @@ namespace LionFire.StateMachines.Class.Generation
 
                 if (attr != null)
                 {
-                    Attribute = attr;
+                    AttributeSyntax = attr;
                 }
                 ClassToAugment = cds;
+                Namespace = SyntaxNodeHelper.GetPrefix(ClassToAugment)?.TrimEnd('.');
+                FullyQualifiedTypeName = $"{Namespace}.{ClassToAugment.Identifier}";
             }
         }
     }
@@ -49,23 +58,22 @@ namespace LionFire.StateMachines.Class.Generation
     [Generator]
     public class StateMachineGenerator : ISourceGenerator
     {
-
         public void Initialize(GeneratorInitializationContext context)
         {
             context.RegisterForSyntaxNotifications(() => new MySyntaxReceiver());
         }
 
-        public void Execute(GeneratorExecutionContext context)
+        public void Execute_Test(GeneratorExecutionContext context)
         {
             var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;
 
             if (syntaxReceiver?.ClassToAugment != null)
             {
-                var prefix = SyntaxNodeHelper.GetPrefix(syntaxReceiver.ClassToAugment);
+                var prefix = syntaxReceiver.Namespace;
 
                 var sourceBuilder = new StringBuilder(@$"using System;
 
-namespace {prefix.TrimEnd('.')} 
+namespace {prefix} 
 {{
     public partial class {syntaxReceiver.ClassToAugment.Identifier} 
     {{
@@ -78,18 +86,57 @@ namespace {prefix.TrimEnd('.')}
                 // using the context, get a list of syntax trees in the users compilation
                 var syntaxTrees = context.Compilation.SyntaxTrees;
 
-            // add the filepath of each tree to the class we're building
-            foreach (SyntaxTree tree in syntaxTrees)
-            {
-                sourceBuilder.AppendLine($@"Console.WriteLine("" - {tree.FilePath.Replace("\\", "/")}"");");
-            }
-            // finish creating the source to inject
-            sourceBuilder.Append($@"
+                // add the filepath of each tree to the class we're building
+                foreach (SyntaxTree tree in syntaxTrees)
+                {
+                    sourceBuilder.AppendLine($@"Console.WriteLine("" - {tree.FilePath.Replace("\\", "/")}"");");
+                }
+                // finish creating the source to inject
+                sourceBuilder.Append($@"
         }}
     }}
 }}
 ");
                 context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+
+            }
+        }
+
+        public void WriteLog(GeneratorExecutionContext context)
+        {
+            Log("Generated on " + DateTime.Now.ToString());
+
+            var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;
+
+            if (syntaxReceiver?.ClassToAugment != null)
+            {
+                var sourceBuilder = new StringBuilder(@$"using System;
+
+namespace {syntaxReceiver.Namespace} 
+{{
+    public partial class {syntaxReceiver.ClassToAugment.Identifier} 
+    {{
+        public static void GeneratorLog() 
+        {{
+            Console.WriteLine(""Namespace: {syntaxReceiver.Namespace}"");
+            Console.WriteLine(""Generator log:"");
+");
+
+                foreach (string logEntry in logEntries)
+                {
+                    sourceBuilder.AppendLine($@"Console.WriteLine(@""{logEntry
+                        //?.Trim()
+                        ?.Replace("\"", "\"\"")
+                        .Replace("\\", "/")
+                        //.Replace("\r\n","  --  ") 
+                        ?? ""}"");");
+                }
+                sourceBuilder.Append($@"
+        }}
+    }}
+}}
+");
+                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachineLog", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
             }
         }
 
@@ -144,8 +191,8 @@ namespace {prefix.TrimEnd('.')}
         #endregion
 
 
-#if OBSOLETE
         AttributeData attributeData;
+#if OBSOLETE
 
         public StateMachineGenerator(AttributeData attributeData)
         {
@@ -180,64 +227,127 @@ namespace {prefix.TrimEnd('.')}
 
         #endregion
 
-#if TOPORT
-        public void GenerateAsync(, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
+        public void Execute(GeneratorExecutionContext context)
         {
-            SourceGeneratorContext context
-            //SyntaxList<MemberDeclarationSyntax> result;
-            if (context.ProcessingNode == null) throw new ArgumentNullException("context.ProcessingMember");
-            var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
-
-            var typeInfo = context.SemanticModel.GetTypeInfo(dClass);
-            //try
-            //{
-            //    foreach (var loc in
-            //    context.Compilation.ScriptClass.Locations)
-            //    {
-            //        Log("Script class location: " + loc);
-            //    }
-            //}
-            //catch { }
-
-            ////Log("Location: " + Assembly.GetEntryAssembly().Location);
-            Log("BaseDir: " + AppContext.BaseDirectory);
-            Log("Compilation: ");
-            Log(" - Source module name " + (context.Compilation.SourceModule.Name));
-            Log(" - source module locations: " + (context.Compilation.SourceModule.Locations.Select(l => l.ToString()).Aggregate((x, y) => x + ", " + y)));
-
-            foreach (var exref in context.Compilation.ExternalReferences)
+            try
             {
-                //Log(" - External ref: " + exref.Display);
-            }
-            foreach (var r in context.Compilation.References)
-            {
-                if (r.Display.Contains(".nuget")) continue;
+                var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;
+                if (syntaxReceiver == null) { throw new ArgumentNullException("context.SyntaxReceiver"); }
+                var dClass = syntaxReceiver?.ClassToAugment;
+                if (dClass == null)
+                {
+                    throw new ArgumentNullException("dClass");
+                    //return;
+                }
 
-                var logText = "#r \"" + r.Display + "\"";
-                
-                Assembly loadedAssembly = null;
+                //var typeInfo = context.SemanticModel.GetTypeInfo(dClass);
+                //try
+                //{
+                //    foreach (var loc in
+                //    context.Compilation.ScriptClass.Locations)
+                //    {
+                //        Log("Script class location: " + loc);
+                //    }
+                //}
+                //catch { }
+
+                ////Log("Location: " + Assembly.GetEntryAssembly().Location);
+                Log("BaseDir: " + AppContext.BaseDirectory);
+                Log("Compilation: ");
+                Log(" - Source module name " + (context.Compilation.SourceModule.Name));
+                Log(" - source module locations: " + (context.Compilation.SourceModule.Locations.Select(l => l.ToString()).Aggregate((x, y) => x + ", " + y)));
+
                 try
                 {
-                    loadedAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(r.Display);
-                    
-                }
-                catch (FileLoadException lfe) when (lfe.Message == "Assembly with same name is already loaded")
-                {
-                    alreadyLoadedAssemblies.Add(r.Display);
-                    logText += " (Already loaded)";
+                    foreach (var exref in context.Compilation.ExternalReferences)
+                    {
+                        //Log(" - External ref: " + exref.Display);
+                    }
                 }
                 catch (Exception ex)
                 {
-                    Log($"Failed to load assembly {r.Display}.  Exception: " + ex.ToString());
-                    continue;
+                    Log("Exception getting external references: " + ex);
                 }
-                if(loadedAssembly != null) assemblies.Add(loadedAssembly);
-                
-                Log(logText);
-            }
-            Log();
+                //#if TOPORT
+                try
+                {
+                    foreach (var r in context.Compilation.References)
+                    {
+                        if (r.Display.Contains(".nuget")) continue;
 
-            return await Part2(context, progress, cancellationToken);
+                        var logText = "#r \"" + r.Display + "\"";
+
+                        Assembly loadedAssembly = null;
+                        try
+                        {
+                            loadedAssembly = Assembly.LoadFrom(r.Display);
+                            //loadedAssembly = AssemblyLoadContext.Default.LoadFromAssemblyPath(r.Display);
+
+                        }
+                        catch (FileLoadException lfe) when (lfe.Message == "Assembly with same name is already loaded")
+                        {
+                            alreadyLoadedAssemblies.Add(r.Display);
+                            logText += " (Already loaded)";
+                        }
+                        catch (Exception ex)
+                        {
+                            Log($"Failed to load assembly {r.Display}.  Exception: " + ex.ToString());
+                            continue;
+                        }
+                        if (loadedAssembly != null) assemblies.Add(loadedAssembly);
+
+                        Log(logText);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    Log("Exception getting references: " + ex);
+                }
+                //#endif
+                Log();
+
+
+                var result = Part2(context);
+
+#if WriteFromSyntax // Not working
+                var sb = new StringBuilder();
+
+                foreach (var s in result)
+                {
+                    Log(s.ToString());
+                    try
+                    {
+                        //var cw = new CustomWorkspace();
+                        //cw.Options.WithChangedOption(CSharpFormattingOptions.IndentBraces, true);
+                        //var formattedCode = Microsoft.CodeAnalysis.Formatting.Formatter.Format(s, cw);
+                        //return formattedCode.ToFullString();
+
+                        var cw = new AdhocWorkspace();
+                        cw.Options.WithChangedOption(CSharpFormattingOptions.IndentBraces, true);
+                        var formatter = Microsoft.CodeAnalysis.Formatting.Formatter.Format(s, cw);
+                        using (StringWriter writer = new StringWriter(sb))
+                        {
+                            formatter.WriteTo(writer);
+                        }
+                    }
+                    catch (ReflectionTypeLoadException ex)
+                    {
+                        foreach (var e in ex.LoaderExceptions) Log("Exception with AdhocWorkspace: " + e);
+                    }
+                }
+                //var code = sb.ToString();
+                //Log(code);
+                //context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(code, Encoding.UTF8));
+#else
+
+                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(result, Encoding.UTF8));
+
+#endif
+            }
+            finally
+            {
+                WriteLog(context);
+            }
         }
 
         List<Assembly> assemblies = new System.Collections.Generic.List<Assembly>();
@@ -260,122 +370,40 @@ namespace {prefix.TrimEnd('.')}
         //    //list.Reverse();
         //    //return list.Aggregate((x, y) => x + "." + y).TrimStart('.');
         //}
-        private Type ResolveType(TransformationContext context, object o)
-        {
-            var result = TryResolveType(context, o);
-            if (result != null) return result;
 
-            var combined = ((INamedTypeSymbol)o).GetFullMetadataName();
-            foreach (var a in assemblies)
-            {
-                Log(" - looking in " + a.FullName);
-            }
-            throw new Exception("Failed to resolve " + combined);
-        }
-        private Type TryResolveType(TransformationContext context, object o)
-        {
-            var combined = ((INamedTypeSymbol)o).GetFullMetadataName();
-
-            var type = Type.GetType(combined);
-
-            if (type == null)
-            {
-                foreach (var a in assemblies)
-                {
-                    type = a.GetType(combined);
-                    //{
-                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
-                    //    {
-                    // Log("LionFire.Execution.Abstractions types:");
-                    //        foreach (var t in a.GetTypes())
-                    //        {
-                    //            Log(".. " + t.FullName);
-                    //        }
-                    //    }
-                    //}
-                    if (type != null) break;
-                }
-            }
-
-            if (type == null)
-            {
-                foreach (var a in alreadyLoadedAssemblies)
-                {
-                    var name = combined + ", " + Path.GetFileNameWithoutExtension(a) + ", Version=2.0.49.0, Culture=neutral, PublicKeyToken=null";
-                    try
-                    {
-                        type = Type.GetType(name);
-                    }
-                    catch { }
-                    Log("Test: " + this.GetType().AssemblyQualifiedName);
-                    Log("Qualified: " +name);
-                    if (type != null) break;
-                }
-            }
-
-#if NETSTANDARD2_0
-            if (type == null)
-            {
-                foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
-                {
-                    type = a.GetType(combined);
-                    if (type != null) break;
-                    //else
-                    //{
-                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
-                    //    {
-                    //        foreach (var t in a.GetTypes())
-                    //        {
-                    //            Log(".. " + t.FullName);
-                    //        }
-                    //    }
-                    //}
-                }
-            }
+#if WriteSyntax
+        private SyntaxList<MemberDeclarationSyntax> Part2(GeneratorExecutionContext context)
+#else
+        private string Part2(GeneratorExecutionContext context)
 #endif
-
-            if (type != null) Log("Resolved " + type.FullName);
-            else
-            {
-                Log("Failed to resolve " + combined);
-
-                //type = context.Compilation.References
-                //    .Select(context.Compilation.GetAssemblyOrModuleSymbol)
-                //    .OfType<IAssemblySymbol>()
-                //    .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(combined));
-
-                //if (type != null)
-                //{
-                //    Log("resolved using 2nd approach" + combined);
-                //}
-            }
-
-
-            return type;
-            //if (i++ == 0) return stateMachineAttribute.StateType;
-            //else return stateMachineAttribute.TransitionType;
-
-            /*  REVIEW -- See this for other options  https://github.com/dotnet/roslyn/issues/3864
-              
-              @robintheilade The GetTypeByMetadataName API exists on both the Compilation and the IAssemblySymbol types. Therefore, if you have a Compilation, you can get the interesting IAssemblySymbols from that, and then call IAssemblySymbol.GetTypeByMetadataName.
-
-            compilation.References
-            .Select(compilation.GetAssemblyOrModuleSymbol)
-            .OfType<IAssemblySymbol>()
-            .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(typeMetadataName))
-            Depending on your use case, you might also want to include Compilation.Assembly in the list of searched IAssemblySymbols.
-
-
-                */
-        }
-        private Task<SyntaxList<MemberDeclarationSyntax>> Part2(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
-            ClassDeclarationSyntax c = null;
+            var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;
+            if (syntaxReceiver == null) { throw new ArgumentNullException("context.SyntaxReceiver"); }
+            var c = syntaxReceiver?.ClassToAugment;
+            var dClass = c;
+            var result = new StringBuilder();
             try
             {
-                var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
+#if !WriteSyntax
+                result.AppendLine(@$"using LionFire.StateMachines.Class;
+
+                namespace {syntaxReceiver.Namespace} 
+                {{
+                    public partial class {syntaxReceiver.ClassToAugment.Identifier} 
+                    {{
+                ");
+#endif
+
                 c = ClassDeclaration(dClass.Identifier).AddModifiers(Token(SyntaxKind.PartialKeyword));
                 StateMachineAttribute stateMachineAttribute;
+
+                var type = context.Compilation.GetTypeByMetadataName(syntaxReceiver.FullyQualifiedTypeName);
+                attributeData = type.GetAttributes().Where(a => a.AttributeClass.GetFullMetadataName() == "LionFire.StateMachines.Class.StateMachineAttribute").FirstOrDefault();  // HARDCODE
+
+                if (attributeData == null)
+                {
+                    throw new ArgumentException($"Could not find StateMachineAttribute on {syntaxReceiver.FullyQualifiedTypeName}");
+                }
 
                 if (attributeData.ConstructorArguments.Any())
                 {
@@ -386,8 +414,8 @@ namespace {prefix.TrimEnd('.')}
                     else
                     {
                         stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute),
-                            ResolveType(context, attributeData.ConstructorArguments[0].Value),
-                            ResolveType(context, attributeData.ConstructorArguments[1].Value),
+                            ResolveType(attributeData.ConstructorArguments[0].Value),
+                            ResolveType(attributeData.ConstructorArguments[1].Value),
                             (GenerateStateMachineFlags)attributeData.ConstructorArguments[2].Value
                             );
                     }
@@ -399,6 +427,7 @@ namespace {prefix.TrimEnd('.')}
 
                 Log();
                 Log("StateMachine: ");
+                //context.ReportDiagnostic()
                 Log(" - StateType: " + stateMachineAttribute.StateType.FullName);
                 Log(" - TransitionType: " + stateMachineAttribute.TransitionType.FullName);
                 Log(" - Options: " + stateMachineAttribute.Options.ToString());
@@ -409,7 +438,7 @@ namespace {prefix.TrimEnd('.')}
                     pi.SetValue(stateMachineAttribute, na.Value.Value);
                 }
 
-                if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisableGeneration)) { return Task.FromResult(new SyntaxList<MemberDeclarationSyntax>()); }
+                if (stateMachineAttribute.Options.HasFlag(GenerateStateMachineFlags.DisableGeneration)) { return ""; }
 
                 Type stateType = stateMachineAttribute.StateType;
                 Type transitionType = stateMachineAttribute.TransitionType;
@@ -436,7 +465,7 @@ namespace {prefix.TrimEnd('.')}
 
                                 if (!usedTransitions.Contains(transition))
                                 {
-                                    //Log(" - method " + md.Identifier.Text + $"() for {transition}");
+                                    Log(" - method " + md.Identifier.Text + $"() for {transition}");
                                     usedTransitions.Add(transition);
                                 }
                             }
@@ -461,7 +490,7 @@ namespace {prefix.TrimEnd('.')}
 
                                 if (!usedStates.Contains(state))
                                 {
-                                    //Log(" - method " + md.Identifier.Text + $"() for state '{state}'");
+                                    Log(" - method " + md.Identifier.Text + $"() for state '{state}'");
                                     usedStates.Add(state);
                                 }
                             }
@@ -512,6 +541,7 @@ namespace {prefix.TrimEnd('.')}
                 //}
                 foreach (var used in usedTransitions)
                 {
+#if WriteSyntax
                     var md = MethodDeclaration(
                                 PredefinedType(
                                     Token(SyntaxKind.VoidKeyword)),
@@ -538,8 +568,30 @@ namespace {prefix.TrimEnd('.')}
                     ;
 
                     c = c.AddMembers(md);
+#else
+                    result.AppendLine($"public void {used}() => {stateMachineAttribute.StateMachineStatePropertyName}.{nameof(StateMachineState<object, object, object>.Transition)}({transitionType.FullName}.{used});");
+#endif
                 }
                 c = AddStateMachineProperty(c, stateMachineAttribute);
+#if WriteSyntax
+#else
+                string StateMachineStatePropertyName = "StateMachine"; // TODO: Allow override in StateMachineAttribute
+                string StateMachineStateFieldName = "stateMachine"; // TODO: Allow override in StateMachineAttribute
+
+                result.AppendLine(@$"public StateMachineState<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}, {c.Identifier}> {StateMachineStatePropertyName}
+        {{
+            get
+            {{
+                if ({StateMachineStateFieldName} == null)
+                {{
+                    {StateMachineStateFieldName} = StateMachine<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}>.Create(this);
+                }}
+                return {StateMachineStateFieldName};
+            }}
+        }}
+        private StateMachineState<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}, {c.Identifier}> {StateMachineStateFieldName};
+");
+#endif
 
                 //foreach (var used in usedStates)
                 //{
@@ -587,7 +639,7 @@ namespace {prefix.TrimEnd('.')}
             {
                 if (c != null)
                 {
-                    Log("#error Code generation resulted in an exception.  See code generation file for details.");
+                    Log("#error Code generation resulted in an exception.  See code generation file for details."); // TODO: in output, don't log this but rather emit #error so compilation fails.
                     Log("Unhandled exception: " + ex.ToString().Replace(Environment.NewLine, Environment.NewLine + " // "));
                 }
                 else
@@ -596,12 +648,18 @@ namespace {prefix.TrimEnd('.')}
                 }
             }
 
+#if WriteSyntax
             c = AddLog(c);
 
             var results = SyntaxFactory.List<MemberDeclarationSyntax>();
             results = results.Add(c);
-            return Task.FromResult(results);
+            return results;
+#else
+            result.AppendLine(@"}}");
+            return result.ToString();
+#endif
         }
+
         private ClassDeclarationSyntax AddStateMachineProperty(ClassDeclarationSyntax c, StateMachineAttribute attr)
         {
             string StateMachineStatePropertyName = "StateMachine";
@@ -689,6 +747,8 @@ namespace {prefix.TrimEnd('.')}
                             Token(SyntaxKind.PrivateKeyword)))});
         }
 
+
+#if WriteSyntax
         private ClassDeclarationSyntax AddLog(ClassDeclarationSyntax c)
         {
             var prefix = "// ";
@@ -697,7 +757,7 @@ namespace {prefix.TrimEnd('.')}
                 Comment(prefix + " Generated on " + DateTime.Now.ToString()),
                 Comment(prefix)
             }
-               .Concat(logEntries.Select(m => (m??"").StartsWith("#error") 
+               .Concat(logEntries.Select(m => (m ?? "").StartsWith("#error")
             ? Trivia(ErrorDirectiveTrivia(true)
                 .WithEndOfDirectiveToken(
                                 Token(
@@ -717,7 +777,124 @@ namespace {prefix.TrimEnd('.')}
                 SyntaxKind.CloseBraceToken,
                 TriviaList()));
         }
+
 #endif
 
+
+        #region ResolveType
+
+        private Type ResolveType(object o)
+        {
+            var result = TryResolveType(o);
+            if (result != null) return result;
+
+            var combined = ((INamedTypeSymbol)o).GetFullMetadataName();
+            foreach (var a in assemblies)
+            {
+                Log(" - looking in " + a.FullName);
+            }
+            throw new Exception("Failed to resolve " + combined);
+        }
+        private Type TryResolveType(object o)
+        {
+            var combined = ((INamedTypeSymbol)o).GetFullMetadataName();
+
+            var type = Type.GetType(combined);
+
+            if (type == null)
+            {
+                foreach (var a in assemblies)
+                {
+                    type = a.GetType(combined);
+                    //{
+                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
+                    //    {
+                    // Log("LionFire.Execution.Abstractions types:");
+                    //        foreach (var t in a.GetTypes())
+                    //        {
+                    //            Log(".. " + t.FullName);
+                    //        }
+                    //    }
+                    //}
+                    if (type != null) break;
+                }
+            }
+
+            if (type == null)
+            {
+                foreach (var a in alreadyLoadedAssemblies)
+                {
+                    var name = combined + ", " + Path.GetFileNameWithoutExtension(a) + ", Version=2.0.49.0, Culture=neutral, PublicKeyToken=null";
+                    try
+                    {
+                        type = Type.GetType(name);
+                    }
+                    catch { }
+                    Log("Test: " + this.GetType().AssemblyQualifiedName);
+                    Log("Qualified: " + name);
+                    if (type != null) break;
+                }
+            }
+
+#if NETSTANDARD2_0
+            if (type == null)
+            {
+                foreach (var a in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    type = a.GetType(combined);
+                    if (type != null) break;
+                    //else
+                    //{
+                    //    if (a.FullName.StartsWith("LionFire.Execution.Abstractions"))
+                    //    {
+                    //        foreach (var t in a.GetTypes())
+                    //        {
+                    //            Log(".. " + t.FullName);
+                    //        }
+                    //    }
+                    //}
+                }
+            }
+#endif
+
+            if (type != null) Log("Resolved " + type.FullName);
+            else
+            {
+                Log("Failed to resolve " + combined);
+
+                //type = context.Compilation.References
+                //    .Select(context.Compilation.GetAssemblyOrModuleSymbol)
+                //    .OfType<IAssemblySymbol>()
+                //    .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(combined));
+
+                //if (type != null)
+                //{
+                //    Log("resolved using 2nd approach" + combined);
+                //}
+            }
+
+
+            return type;
+            //if (i++ == 0) return stateMachineAttribute.StateType;
+            //else return stateMachineAttribute.TransitionType;
+
+            /*  REVIEW -- See this for other options  https://github.com/dotnet/roslyn/issues/3864
+
+              @robintheilade The GetTypeByMetadataName API exists on both the Compilation and the IAssemblySymbol types. Therefore, if you have a Compilation, you can get the interesting IAssemblySymbols from that, and then call IAssemblySymbol.GetTypeByMetadataName.
+
+            compilation.References
+            .Select(compilation.GetAssemblyOrModuleSymbol)
+            .OfType<IAssemblySymbol>()
+            .Select(assemblySymbol => assemblySymbol.GetTypeByMetadataName(typeMetadataName))
+            Depending on your use case, you might also want to include Compilation.Assembly in the list of searched IAssemblySymbols.
+
+
+                */
+        }
+
+        #endregion
+
     }
+
+
 }
