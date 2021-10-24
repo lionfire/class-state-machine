@@ -1,5 +1,4 @@
-﻿using CodeGeneration.Roslyn;
-using Microsoft.CodeAnalysis;
+﻿using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -13,30 +12,92 @@ using Validation;
 using static Microsoft.CodeAnalysis.CSharp.SyntaxFactory;
 using System.Runtime.Loader;
 using LionFire.ExtensionMethods.CodeAnalysis;
+using System.Text;
+using Microsoft.CodeAnalysis.Text;
 
 namespace LionFire.StateMachines.Class.Generation
 {
     // TIP: Use http://roslynquoter.azurewebsites.net/ for generating new code
 
-
-    public class StateMachineGenerator : ICodeGenerator
+    internal class MySyntaxReceiver : ISyntaxReceiver
     {
-        AttributeData attributeData;
+        public ClassDeclarationSyntax ClassToAugment { get; private set; }
 
-        public StateMachineGenerator(AttributeData attributeData)
+        // StateMachineAttribute
+        public AttributeSyntax Attribute { get; private set; }
+
+        public void OnVisitSyntaxNode(SyntaxNode syntaxNode)
         {
-            Log("Created generator");
-            Requires.NotNull(attributeData, nameof(attributeData));
-            this.attributeData = attributeData;
+            // Business logic to decide what we're interested in goes here
+            if (syntaxNode is ClassDeclarationSyntax cds)
+            {
+                var attr = cds.AttributeLists.SelectMany(al => al.Attributes).Where(a =>
+                {
+                    var name = a.Name.NormalizeWhitespace().ToFullString();
+                    return name == "StateMachine" || name == "StateMachineAttribute" || name.Contains("StateMachine");
+                }).FirstOrDefault();
 
-            AssemblyLoadContext.Default.Resolving += Default_Resolving;
+                if (attr != null)
+                {
+                    Attribute = attr;
+                }
+                ClassToAugment = cds;
+            }
+        }
+    }
+
+    [Generator]
+    public class StateMachineGenerator : ISourceGenerator
+    {
+
+        public void Initialize(GeneratorInitializationContext context)
+        {
+            context.RegisterForSyntaxNotifications(() => new MySyntaxReceiver());
         }
 
-        private Assembly Default_Resolving(AssemblyLoadContext arg1, AssemblyName arg2)
+        public void Execute(GeneratorExecutionContext context)
         {
-            Log("Resolving - " + arg2);
-            return null;
+            var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;
+
+            if (syntaxReceiver?.ClassToAugment != null)
+            {
+                var prefix = SyntaxNodeHelper.GetPrefix(syntaxReceiver.ClassToAugment);
+
+                var sourceBuilder = new StringBuilder(@$"using System;
+
+namespace {prefix.TrimEnd('.')} 
+{{
+    public partial class {syntaxReceiver.ClassToAugment.Identifier} 
+    {{
+        public void SayHello() 
+        {{
+            Console.WriteLine(""Namespace: {prefix}"");
+            Console.WriteLine(""The following syntax trees existed in the compilation that created this program:"");
+");
+
+                // using the context, get a list of syntax trees in the users compilation
+                var syntaxTrees = context.Compilation.SyntaxTrees;
+
+            // add the filepath of each tree to the class we're building
+            foreach (SyntaxTree tree in syntaxTrees)
+            {
+                sourceBuilder.AppendLine($@"Console.WriteLine("" - {tree.FilePath.Replace("\\", "/")}"");");
+            }
+            // finish creating the source to inject
+            sourceBuilder.Append($@"
+        }}
+    }}
+}}
+");
+                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+            }
         }
+
+        // ----------
+
+        #region Configuration
+
+        #region Defaults
 
         public static HashSet<string> DefaultAfterPrefixes = new HashSet<string>()
             {
@@ -56,6 +117,8 @@ namespace LionFire.StateMachines.Class.Generation
                 "OnLeave",
                 "OnLeaving",
             };
+
+        #endregion
 
         public HashSet<string> AfterPrefixes
         {
@@ -78,6 +141,27 @@ namespace LionFire.StateMachines.Class.Generation
         }
         private HashSet<string> leavingPrefixes;
 
+        #endregion
+
+
+#if OBSOLETE
+        AttributeData attributeData;
+
+        public StateMachineGenerator(AttributeData attributeData)
+        {
+            Log("Created generator");
+            Requires.NotNull(attributeData, nameof(attributeData));
+            this.attributeData = attributeData;
+
+            AssemblyLoadContext.Default.Resolving += Default_Resolving;
+        }
+
+        private Assembly Default_Resolving(AssemblyLoadContext arg1, AssemblyName arg2)
+        {
+            Log("Resolving - " + arg2);
+            return null;
+        }
+#endif
 
         private List<string> logEntries = new List<string>();
 
@@ -85,7 +169,7 @@ namespace LionFire.StateMachines.Class.Generation
         const string unusedIndicator = " - ";
         const string usedIndicator = " * ";
 
-#region Log
+        #region Log
 
         //[Conditional("DEBUG")]
         public void Log(string msg = null)
@@ -94,10 +178,13 @@ namespace LionFire.StateMachines.Class.Generation
             logEntries.Add(msg);
         }
 
-#endregion
+        #endregion
 
-        public async Task<SyntaxList<MemberDeclarationSyntax>> GenerateAsync(TransformationContext context, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
+#if TOPORT
+        public void GenerateAsync(, IProgress<Diagnostic> progress, CancellationToken cancellationToken)
         {
+            SourceGeneratorContext context
+            //SyntaxList<MemberDeclarationSyntax> result;
             if (context.ProcessingNode == null) throw new ArgumentNullException("context.ProcessingMember");
             var dClass = (ClassDeclarationSyntax)context.ProcessingNode;
 
@@ -630,6 +717,7 @@ namespace LionFire.StateMachines.Class.Generation
                 SyntaxKind.CloseBraceToken,
                 TriviaList()));
         }
+#endif
 
     }
 }

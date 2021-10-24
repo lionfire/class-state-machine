@@ -1,6 +1,4 @@
-﻿using CodeGeneration.Roslyn;
-using LionFire.StateMachines.Class.Generation;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -10,7 +8,7 @@ namespace LionFire.StateMachines.Class
     // Todo: Change StateMachineAttribute to StateTransitions(Allowed = , Disallowed = )]
 
     [AttributeUsage(AttributeTargets.Class, AllowMultiple = false, Inherited = true)]
-    [CodeGenerationAttribute(typeof(StateMachineGenerator))]
+    //[CodeGenerationAttribute(typeof(StateMachineGenerator))]
     //[Conditional("CodeGeneration")]
     public sealed class StateMachineAttribute : Attribute
     {

@@ -9,6 +9,8 @@
     <!--<Version>2.0.1</Version>
     <AssemblyVersion>2.0.1</AssemblyVersion>
     <FileVersion>2.0.1</FileVersion>-->
+    <LangVersion>latest</LangVersion>
+    <IsRoslynComponent>true</IsRoslynComponent>
   </PropertyGroup>
   <ItemGroup>
     <Compile Remove="StateInfo\**" />
@@ -17,12 +19,14 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeGeneration.Roslyn" Version="0.6.1" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="3.11.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.2" PrivateAssets="all" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
-    <PackageReference Include="Validation" Version="2.4.22" />
+    <PackageReference Include="Validation" Version="2.5.42" />
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
     <ProjectReference Include="..\LionFire.StateMachines\LionFire.StateMachines.csproj" />
   </ItemGroup>
 

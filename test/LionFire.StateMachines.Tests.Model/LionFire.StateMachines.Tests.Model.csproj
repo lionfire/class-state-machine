@@ -1,20 +1,12 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard2.0</TargetFramework>
+    <TargetFramework>net5.0</TargetFramework>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CodeGeneration.Roslyn.BuildTime" Version="0.6.1" PrivateAssets="All" />
-  </ItemGroup>
-  
-  <ItemGroup>
-    <DotNetCliToolReference Include="dotnet-codegen" Version="0.6.1" />
-  </ItemGroup>
-
-  
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\LionFire.StateMachines.Generation\LionFire.StateMachines.Generation.csproj" />
+    <ProjectReference Include="..\..\src\LionFire.StateMachines.Abstractions\LionFire.StateMachines.Abstractions.csproj" />
+    <ProjectReference Include="..\..\src\LionFire.StateMachines.Generation\LionFire.StateMachines.Generation.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
     <ProjectReference Include="..\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj" />
   </ItemGroup>
 
