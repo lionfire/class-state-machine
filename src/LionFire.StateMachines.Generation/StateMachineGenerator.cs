@@ -136,7 +136,8 @@ namespace {syntaxReceiver.Namespace}
     }}
 }}
 ");
-                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachineLog", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachineLog.cs", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
+                //context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachineLog", SourceText.From(sourceBuilder.ToString(), Encoding.UTF8));
             }
         }
 
@@ -340,7 +341,8 @@ namespace {syntaxReceiver.Namespace}
                 //context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(code, Encoding.UTF8));
 #else
 
-                context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine", SourceText.From(result, Encoding.UTF8));
+                //context.AddSource($"{syntaxReceiver.ClassToAugment.Identifier}._StateMachine.cs", SourceText.From(result, Encoding.UTF8));
+                context.AddSource($"StateMachine", SourceText.From(result, Encoding.UTF8));
 
 #endif
             }
@@ -396,6 +398,8 @@ namespace {syntaxReceiver.Namespace}
 
                 c = ClassDeclaration(dClass.Identifier).AddModifiers(Token(SyntaxKind.PartialKeyword));
                 StateMachineAttribute stateMachineAttribute;
+                INamedTypeSymbol stateTypeSymbol = null;
+                INamedTypeSymbol transitionTypeSymbol = null;
 
                 var type = context.Compilation.GetTypeByMetadataName(syntaxReceiver.FullyQualifiedTypeName);
                 attributeData = type.GetAttributes().Where(a => a.AttributeClass.GetFullMetadataName() == "LionFire.StateMachines.Class.StateMachineAttribute").FirstOrDefault();  // HARDCODE
@@ -413,9 +417,15 @@ namespace {syntaxReceiver.Namespace}
                     }
                     else
                     {
+                        stateTypeSymbol = context.Compilation.GetTypeByMetadataName(attributeData.ConstructorArguments[0].Value.ToString());
+                        transitionTypeSymbol = context.Compilation.GetTypeByMetadataName(attributeData.ConstructorArguments[1].Value.ToString());
                         stateMachineAttribute = (StateMachineAttribute)Activator.CreateInstance(typeof(StateMachineAttribute),
+#if false // AvoidResolve
+                            null, null,
+#else
                             ResolveType(attributeData.ConstructorArguments[0].Value),
                             ResolveType(attributeData.ConstructorArguments[1].Value),
+#endif
                             (GenerateStateMachineFlags)attributeData.ConstructorArguments[2].Value
                             );
                     }
@@ -428,8 +438,15 @@ namespace {syntaxReceiver.Namespace}
                 Log();
                 Log("StateMachine: ");
                 //context.ReportDiagnostic()
-                Log(" - StateType: " + stateMachineAttribute.StateType.FullName);
-                Log(" - TransitionType: " + stateMachineAttribute.TransitionType.FullName);
+                //Log(" - StateType: " + stateMachineAttribute.StateType?.FullName ?? stateTypeSymbol.GetFullMetadataName());
+                //Log(" - TransitionType: " + stateMachineAttribute.TransitionType?.FullName ?? transitionTypeSymbol.GetFullMetadataName());
+                Log(" - StateTypeSymbol: " + stateTypeSymbol);
+                Log(" - TransitionTypeSymbol: " + transitionTypeSymbol);
+                Log(" - StateTypeSymbol.GetFullMetadataName(): " + stateTypeSymbol.GetFullMetadataName());
+                Log(" - TransitionTypeSymbol.GetFullMetadataName(): " + transitionTypeSymbol.GetFullMetadataName());
+                Log(" - StateTypeSymbol members: " + stateTypeSymbol.GetMembers().Select(m => m.Name).Aggregate((x, y) => $"{x}, {y}"));
+                Log(" - TransitionTypeSymbol members: " + transitionTypeSymbol.GetMembers().Select(m => m.Name).Aggregate((x, y) => $"{x}, {y}"));
+
                 Log(" - Options: " + stateMachineAttribute.Options.ToString());
                 Log();
                 foreach (var na in attributeData.NamedArguments)
@@ -443,8 +460,10 @@ namespace {syntaxReceiver.Namespace}
                 Type stateType = stateMachineAttribute.StateType;
                 Type transitionType = stateMachineAttribute.TransitionType;
 
-                var allStates = new HashSet<string>(stateType.GetFields(bf).Select(fi => fi.Name));
-                var allTransitions = new HashSet<string>(transitionType.GetFields(bf).Select(fi => fi.Name));
+                //var allStates = new HashSet<string>(stateType.GetFields(bf).Select(fi => fi.Name));
+                var allStates = new HashSet<string>(stateTypeSymbol.GetMembers().Select(m => m.Name));
+                //var allTransitions = new HashSet<string>(transitionType.GetFields(bf).Select(fi => fi.Name));
+                var allTransitions = new HashSet<string>(transitionTypeSymbol.GetMembers().Select(m => m.Name));
                 HashSet<string> usedStates;
                 HashSet<string> usedTransitions;
 
@@ -510,7 +529,9 @@ namespace {syntaxReceiver.Namespace}
 
                 Log("States:");
 
-                foreach (var n in stateMachineAttribute.StateType.GetFields(bf).Select(fi => fi.Name))
+                foreach (var n in allStates
+                    //stateMachineAttribute.StateType.GetFields(bf).Select(fi => fi.Name)
+                        )
                 {
                     Log((usedStates.Contains(n) ? usedIndicator : unusedIndicator) + n);
 
@@ -518,7 +539,9 @@ namespace {syntaxReceiver.Namespace}
                 Log();
 
                 Log("Transitions:");
-                foreach (var n in stateMachineAttribute.TransitionType.GetFields(bf).Select(fi => fi.Name))
+                foreach (var n in allTransitions
+                    //stateMachineAttribute.TransitionType.GetFields(bf).Select(fi => fi.Name)
+                        )
                 {
                     Log((usedTransitions.Contains(n) ? usedIndicator : unusedIndicator) + n);
                 }
@@ -578,18 +601,20 @@ namespace {syntaxReceiver.Namespace}
                 string StateMachineStatePropertyName = "StateMachine"; // TODO: Allow override in StateMachineAttribute
                 string StateMachineStateFieldName = "stateMachine"; // TODO: Allow override in StateMachineAttribute
 
-                result.AppendLine(@$"public StateMachineState<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}, {c.Identifier}> {StateMachineStatePropertyName}
+                //stateMachineAttribute.StateType.FullName
+                //stateMachineAttribute.TransitionType.FullName
+                result.AppendLine(@$"public StateMachineState<{stateTypeSymbol.GetFullMetadataName()}, {transitionTypeSymbol.GetFullMetadataName()}, {c.Identifier}> {StateMachineStatePropertyName}
         {{
             get
             {{
                 if ({StateMachineStateFieldName} == null)
                 {{
-                    {StateMachineStateFieldName} = StateMachine<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}>.Create(this);
+                    {StateMachineStateFieldName} = StateMachine<{stateTypeSymbol.GetFullMetadataName()}, {transitionTypeSymbol.GetFullMetadataName()}>.Create(this);
                 }}
                 return {StateMachineStateFieldName};
             }}
         }}
-        private StateMachineState<{stateMachineAttribute.StateType.FullName}, {stateMachineAttribute.TransitionType.FullName}, {c.Identifier}> {StateMachineStateFieldName};
+        private StateMachineState<{stateTypeSymbol.GetFullMetadataName()}, {transitionTypeSymbol.GetFullMetadataName()}, {c.Identifier}> {StateMachineStateFieldName};
 ");
 #endif
 
