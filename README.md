@@ -7,8 +7,11 @@ A convention-oriented state machine to ease the burden for typical C# classes.  
 
 ## Status
 
-
 Unit tests in this project work, but I'm having issues getting it working in a NETStandard2.0 environment. YMMV.  PR's welcome.  There are potentially related issues in the upstream with netstandard2.0.  See [https://github.com/AArnott/CodeGeneration.Roslyn/issues/48](https://github.com/AArnott/CodeGeneration.Roslyn/issues/48)
+
+### ROSLYN MIGRATION STATUS
+
+The CodeGeneration.Roslyn project itself has been discontinued in favor of the new Roslyn Source Generators.  I ported it in the source-generator branch, and the generation works (generator project can't be newer than netstandard2.0), however, Visual Studio 2019 and 2022 claims the generator generated no files, and Intellisense is not picking up which is a dealbreaker for me.  I saw others have this problem on a github issue thread but nobody had any answers.  So I have to conclude the support for this doesn't seem to be really complete yet.
 
 ## Info
 
