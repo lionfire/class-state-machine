@@ -1,4 +1,5 @@
-﻿using Microsoft.CodeAnalysis;
+﻿#define LoadExternalAssemblies
+using Microsoft.CodeAnalysis;
 using Microsoft.CodeAnalysis.CSharp;
 using Microsoft.CodeAnalysis.CSharp.Syntax;
 using System;
@@ -279,6 +280,7 @@ namespace {syntaxReceiver.Namespace}
                         var logText = "#r \"" + r.Display + "\"";
 
                         Assembly loadedAssembly = null;
+#if LoadExternalAssemblies
                         try
                         {
                             loadedAssembly = Assembly.LoadFrom(r.Display);
@@ -295,6 +297,7 @@ namespace {syntaxReceiver.Namespace}
                             Log($"Failed to load assembly {r.Display}.  Exception: " + ex.ToString());
                             continue;
                         }
+#endif
                         if (loadedAssembly != null) assemblies.Add(loadedAssembly);
 
                         Log(logText);
@@ -806,7 +809,7 @@ namespace {syntaxReceiver.Namespace}
 #endif
 
 
-        #region ResolveType
+#region ResolveType
 
         private Type ResolveType(object o)
         {
@@ -826,6 +829,7 @@ namespace {syntaxReceiver.Namespace}
 
             var type = Type.GetType(combined);
 
+#if LoadExternalAssemblies
             if (type == null)
             {
                 foreach (var a in assemblies)
@@ -881,7 +885,7 @@ namespace {syntaxReceiver.Namespace}
                 }
             }
 #endif
-
+#endif
             if (type != null) Log("Resolved " + type.FullName);
             else
             {
@@ -917,7 +921,7 @@ namespace {syntaxReceiver.Namespace}
                 */
         }
 
-        #endregion
+#endregion
 
     }
 
