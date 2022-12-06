@@ -231,6 +231,7 @@ namespace {syntaxReceiver.Namespace}
 
         public void Execute(GeneratorExecutionContext context)
         {
+            //Debugger.Launch();
             try
             {
                 var syntaxReceiver = context.SyntaxReceiver as MySyntaxReceiver;

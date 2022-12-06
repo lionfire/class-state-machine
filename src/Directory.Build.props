@@ -22,8 +22,9 @@
 
 
   </PropertyGroup>
-  <Target Name="CopyPackage" AfterTargets="Pack">
+  
+	<!--<Target Name="CopyPackage" AfterTargets="Pack">
     <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" />
-  </Target>
+  </Target>-->
 
 </Project>
