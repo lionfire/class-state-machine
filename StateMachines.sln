@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.28307.271
+# Visual Studio Version 17
+VisualStudioVersion = 17.4.33213.308
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines", "src\LionFire.StateMachines\LionFire.StateMachines.csproj", "{DC128BD5-0722-4929-B28B-21E03029E013}"
 EndProject
@@ -18,9 +18,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LionFire.StateMachines.Tests.ExternalModel", "test\LionFire.StateMachines.Tests.ExternalModel\LionFire.StateMachines.Tests.ExternalModel.csproj", "{E365F69D-7657-49FA-931A-E05E0585A753}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{3458B0A7-828A-47E2-8629-052081B1EBC3}"
-	ProjectSection(SolutionItems) = preProject
-		global.json = global.json
-	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
