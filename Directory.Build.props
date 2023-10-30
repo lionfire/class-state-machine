@@ -1,0 +1,74 @@
+<Project>
+
+  <PropertyGroup>
+    <Configurations>Debug;Release</Configurations>
+
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+
+    <!--<BaseIntermediateOutputPath>$(MSBuildThisFileDirectory)..\bin\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath Condition=" '$(BaseOutputPath)' == '' ">$(MSBuildThisFileDirectory)..\bin\$(MSBuildProjectName)\</BaseOutputPath>-->
+
+    <BaseIntermediateOutputPath>$(BuildRoot)\obj\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</BaseIntermediateOutputPath>
+    <BaseOutputPath>$(BuildRoot)\bin\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</BaseOutputPath>
+		<!--<MSBuildProjectExtensionsPath>$(BuildRoot)\obj-buildext\$(Configuration)\$(Platform)\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>-->
+		<!--<MSBuildProjectExtensionsPath>z:\build\obj\$(MSBuildProjectName)\</MSBuildProjectExtensionsPath>-->
+		
+		<!--<PackageOutputDir>g:\build\packages\lionfire</PackageOutputDir>-->
+		<GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+
+		<!-- <NeutralLanguage>English (United States)</NeutralLanguage> -->
+    <LangVersion>latest</LangVersion>
+
+    <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
+
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <Authors>Jared Thirsk</Authors>
+    <Copyright>2010-2023 Jared Thirsk</Copyright>
+    <Company>LionFire Games</Company>
+    <RepositoryUrl>https://github.com/lionfire/Core</RepositoryUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
+    <!-- <PackageIcon>19334699.png</PackageIcon> -->
+
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Compile Remove="obj\**" />
+    <EmbeddedResource Remove="obj\**" />
+    <None Remove="obj\**" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove="bin\**" />
+    <EmbeddedResource Remove="bin\**" />
+    <None Remove="bin\**" />
+  </ItemGroup>
+
+
+  <PropertyGroup Condition=" '$(Configuration)'=='Debug'">
+    <BumpLabel>dev</BumpLabel>
+    <BumpLabelDigits>4</BumpLabelDigits>
+    <!-- <GeneratePackageOnBuild>True</GeneratePackageOnBuild> -->
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)'=='Release'">
+    <BumpRevision>True</BumpRevision>
+    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
+  </PropertyGroup>
+
+
+  <!-- <Target Name="CopyPackage" AfterTargets="Pack">
+    <Copy SourceFiles="$(OutputPath)..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" />
+  </Target> -->
+  <!-- <Target Name="CopyPackage" AfterTargets="Pack">
+    <Copy SourceFiles="$(OutputPath)\..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" />
+  </Target> -->
+<!--<Target Name="CopyPackage" AfterTargets="Pack">
+	<Copy SourceFiles="$(OutputPath)\..\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" ContinueOnError="true"/>
+  <Copy SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" ContinueOnError="true"/>
+</Target>-->
+
+	<Target Name="AfterPack" AfterTargets="Pack">
+		<Exec Command="dotnet nuget push $(PackageOutputPath)*.nupkg --source LionFireLocal" />
+	</Target>
+	
+</Project>
