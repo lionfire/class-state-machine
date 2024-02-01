@@ -21,7 +21,8 @@
 
     <UseFullSemVerForNuGet>false</UseFullSemVerForNuGet>
 
-  </PropertyGroup>
+		<EnableSourceControlManagerQueries>true</EnableSourceControlManagerQueries>
+	</PropertyGroup>
 
   <PropertyGroup>
     <Authors>Jared Thirsk</Authors>
