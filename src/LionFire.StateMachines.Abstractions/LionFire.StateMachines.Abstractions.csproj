@@ -11,6 +11,7 @@
     <FileVersion>2.0.1.0</FileVersion>
     <Version>2.0.1</Version>-->
 		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
+		<Configurations>Debug;Release</Configurations>
 	</PropertyGroup>
 
 </Project>
