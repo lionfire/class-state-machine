@@ -3,18 +3,13 @@
 
 
   <PropertyGroup>
-    
-    <!--<FileVersion>2.0.1.0</FileVersion>
-    <Version>2.0.1</Version>
-	<AssemblyVersion>2.0.1.0</AssemblyVersion>-->
-    <!--<VersionPrefix>1.0.1</VersionPrefix>-->
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>LionFire</RootNamespace>
     <LangVersion>7.3</LangVersion>
-
-		<ProduceReferenceAssembly>true</ProduceReferenceAssembly>
-
-		<Configurations>Debug;Release</Configurations>
+    <ProduceReferenceAssembly>false</ProduceReferenceAssembly>
+    <Configurations>Debug;Release</Configurations>
+    <Description>Class-based state machine implementation with attribute-driven state and transition definitions.</Description>
+    <PackageTags>statemachine state transitions</PackageTags>
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(Configuration)'=='Release'">
