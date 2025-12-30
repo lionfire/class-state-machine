@@ -12,6 +12,11 @@
     <Version>2.0.1</Version>-->
 		<ProduceReferenceAssembly>false</ProduceReferenceAssembly>
 		<Configurations>Debug;Release</Configurations>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
 	</PropertyGroup>
+
+	<ItemGroup>
+		<None Include="README.md" Pack="true" PackagePath="\" />
+	</ItemGroup>
 
 </Project>

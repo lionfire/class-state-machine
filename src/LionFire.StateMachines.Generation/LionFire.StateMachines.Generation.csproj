@@ -16,7 +16,12 @@
     <!-- RS1042: Suppress warning about types from Workspaces - will be fixed when converting to IIncrementalGenerator -->
     <NoWarn>$(NoWarn);RS1042</NoWarn>
     <Configurations>Debug;Release</Configurations>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
   <ItemGroup>
     <Compile Remove="StateInfo\**" />
     <EmbeddedResource Remove="StateInfo\**" />

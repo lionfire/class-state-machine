@@ -10,7 +10,12 @@
     <Configurations>Debug;Release</Configurations>
     <Description>Class-based state machine implementation with attribute-driven state and transition definitions.</Description>
     <PackageTags>statemachine state transitions</PackageTags>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+  </ItemGroup>
 
   <PropertyGroup Condition=" '$(Configuration)'=='Release'">
     <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
