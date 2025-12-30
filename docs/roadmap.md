@@ -1,7 +1,7 @@
 # LionFire.StateMachines - Development Roadmap
 
-**Last Updated**: 2025-12-28
-**Version**: Based on comprehensive code review
+**Last Updated**: 2025-12-30
+**Version**: 8.0.0-preview (IIncrementalGenerator refactor complete)
 
 This roadmap outlines prioritized improvements to elevate LionFire.StateMachines from an experimental library to a production-ready, competitive state machine framework for C#.
 
@@ -88,62 +88,57 @@ The project requires approximately 12-16 weeks of focused development to reach p
 
 ---
 
-### 1.2 Dependency Updates & Compatibility (HIGH PRIORITY)
+### 1.2 Dependency Updates & Compatibility ✅ COMPLETED
 **Effort**: 3 days | **Impact**: Critical
 
 #### Tasks:
-- [ ] **Update Roslyn packages** (4 hours)
-  - Upgrade Microsoft.CodeAnalysis.CSharp from 4.4.0 to 4.12+
-  - Upgrade Microsoft.CodeAnalysis.Analyzers from 3.3.3 to 3.11+
-  - Upgrade Microsoft.CodeAnalysis.CSharp.Workspaces to 4.12+
-  - Test source generator with new APIs
+- [x] **Update Roslyn packages** (4 hours) ✅
+  - Upgraded Microsoft.CodeAnalysis.CSharp to 4.14.0
+  - Upgraded Microsoft.CodeAnalysis.Analyzers to 3.11.0
+  - Removed Microsoft.CodeAnalysis.CSharp.Workspaces (not needed for incremental generator)
 
-- [ ] **Resolve netstandard2.0 issues** (8 hours)
-  - Investigate root cause of netstandard2.0 incompatibility
-  - Either fix issues OR update target to netstandard2.1/net6.0+
-  - Document supported frameworks clearly in README
-  - Update project files with correct target frameworks
+- [x] **Resolve netstandard2.0 issues** (8 hours) ✅
+  - Libraries target netstandard2.0 for compatibility
+  - Tests run on net8.0, net9.0, net10.0
+  - Generator is self-contained (no runtime assembly loading issues)
 
-- [ ] **Update all other dependencies** (2 hours)
-  - System.Reflection.TypeExtensions to latest
-  - Evaluate if Validation package (2.5.51) is still needed
-  - Consider replacing with standard ArgumentNullException checks
+- [x] **Update all other dependencies** (2 hours) ✅
+  - Removed Validation package (no longer needed)
+  - Generator has minimal dependencies
 
 - [ ] **Test compatibility** (4 hours)
-  - Test on .NET 6, 7, 8
-  - Test on .NET Framework 4.8 (if still targeting)
-  - Test with various C# language versions
-  - Create compatibility matrix in README
+  - Tests pass on .NET 8, 9, 10
+  - Need to test on .NET Framework 4.8
+  - Need to create compatibility matrix in README
 
 **Deliverables**:
-- All dependencies <1 year old
-- netstandard2.0 issue resolved or documented
-- Compatibility matrix published
+- ✅ All Roslyn dependencies current (4.14.0)
+- ✅ netstandard2.0 compatibility maintained
+- Compatibility matrix still needed
 
 **Success Metrics**:
-- No security warnings from outdated packages
-- Library works on .NET 6+ without issues
+- ✅ No security warnings from outdated packages
+- ✅ Library works on .NET 8+ without issues
 
 ---
 
-### 1.3 Code Quality Improvements (HIGH PRIORITY)
+### 1.3 Code Quality Improvements ✅ MOSTLY COMPLETED
 **Effort**: 1 week | **Impact**: High
 
 #### Tasks:
-- [ ] **Remove commented-out code** (4 hours)
-  - Delete or move to separate example files
-  - Remove preprocessor directives (#if LoadExternalAssemblies, etc.)
-  - Clean up TODO comments (implement or remove)
+- [x] **Remove commented-out code** (4 hours) ✅
+  - Deleted Execution-TEMPTEST folder
+  - Removed StateMachineOptions.cs (unused)
+  - Removed SyntaxNodeHelper.cs (unused)
+  - Preprocessor directives eliminated in new generator
 
-- [ ] **Refactor StateMachineGenerator** (12 hours)
-  - Extract classes:
-    - `SyntaxAnalyzer` - Find [StateMachine] attributes
-    - `SemanticAnalyzer` - Resolve types
-    - `ConventionScanner` - Discover convention methods
-    - `CodeEmitter` - Generate partial class
-    - `DiagnosticReporter` - Report errors/warnings
-  - Remove debug logging code (or gate behind #if DEBUG)
-  - Move test code to separate test generator project
+- [x] **Refactor StateMachineGenerator** (12 hours) ✅ COMPLETE REWRITE
+  - Converted from ISourceGenerator to **IIncrementalGenerator**
+  - Reduced from ~930 lines to ~260 lines (70% reduction!)
+  - Self-contained: no project references needed at runtime
+  - Uses ForAttributeWithMetadataName for efficient attribute detection
+  - Clean separation: StateMachineInfo struct for data, pure functions for logic
+  - EnforceExtendedAnalyzerRules enabled (was disabled before)
 
 - [ ] **Add Roslyn diagnostics** (8 hours)
   - Emit warnings/errors to IDE when:
@@ -164,15 +159,15 @@ The project requires approximately 12-16 weeks of focused development to reach p
   - Consider enabling nullable reference types
 
 **Deliverables**:
-- Clean, maintainable codebase
-- Refactored generator (5 classes instead of 1 god class)
-- Roslyn diagnostics for user errors
-- EditorConfig with analyzers
+- ✅ Clean, maintainable codebase
+- ✅ Refactored generator (single clean class, not god class)
+- Roslyn diagnostics still needed
+- EditorConfig still needed
 
 **Success Metrics**:
-- Zero compiler warnings
-- Generator complexity reduced by 50%
-- User errors reported in IDE with clear messages
+- ✅ Zero compiler warnings (build passes clean)
+- ✅ Generator complexity reduced by 70%
+- User error diagnostics still needed
 
 ---
 

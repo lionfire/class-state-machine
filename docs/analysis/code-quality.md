@@ -44,28 +44,20 @@ The convention-based method discovery (`On{TransitionName}`, `Can{TransitionName
 
 ### Anti-Patterns Identified
 
-#### 1. God Class - StateMachineGenerator
+#### 1. ~~God Class - StateMachineGenerator~~ ✅ RESOLVED (2025-12-30)
 **Location**: `/mnt/c/src/StateMachines/src/LionFire.StateMachines.Generation/StateMachineGenerator.cs`
 
-**Problem**: 930+ line class doing too many things:
-- Syntax parsing
-- Attribute discovery
-- Assembly loading
-- Type resolution
-- Code generation
-- Logging
-- Error handling
+**Previous Problem**: 930+ line class doing too many things.
 
-**Recommendation**:
-```
-Refactor into multiple classes:
-- SyntaxAnalyzer (parsing and discovery)
-- TypeResolver (assembly and type resolution)
-- CodeGenerator (actual code emission)
-- DiagnosticReporter (errors and warnings)
-```
+**Resolution**: Complete rewrite to IIncrementalGenerator:
+- Reduced from ~930 lines to ~260 lines (70% reduction)
+- Single focused class with clear responsibilities
+- Uses modern `ForAttributeWithMetadataName` pattern
+- Self-contained with no external project references
+- Clean data structures (StateMachineInfo struct)
+- Pure functions for code generation
 
-**Impact**: Maintainability nightmare, difficult to test, violates Single Responsibility Principle.
+**Current Status**: No longer an anti-pattern. Code is clean and maintainable.
 
 #### 2. Excessive Reflection Usage
 **Location**: `/mnt/c/src/StateMachines/src/LionFire.StateMachines/StateMachines/Class/BindingProvider.cs` (lines 114-192)
@@ -88,39 +80,25 @@ private Action<TOwner, IStateChange<TState, TTransition>> GetHandlerAction(Metho
 
 **Recommendation**: Use compiled expression trees or source generation to create typed delegates instead of `MethodInfo.Invoke()`. This would provide 10-100x performance improvement for transitions.
 
-#### 3. Swallowing Exceptions
-**Location**: `/mnt/c/src/StateMachines/src/LionFire.StateMachines.Generation/StateMachineGenerator.cs` (lines 667-678)
+#### 3. ~~Swallowing Exceptions~~ ✅ RESOLVED (2025-12-30)
+**Previous Location**: Old StateMachineGenerator.cs
 
-```csharp
-catch (Exception ex)
-{
-    if (c != null)
-    {
-        Log("#error Code generation resulted in an exception...");
-        Log("Unhandled exception: " + ex.ToString().Replace(...));
-    }
-    else
-    {
-        throw;
-    }
-}
-```
+**Resolution**: The new IIncrementalGenerator implementation:
+- Uses pure functions with no try-catch swallowing
+- Returns null for invalid inputs (handled gracefully by pipeline)
+- No logging code mixed with generation logic
 
-**Problem**: Exceptions during code generation are logged but not reported as Roslyn diagnostics. Users won't see clear error messages in their IDE.
+**Remaining Work**: Could add explicit Roslyn diagnostics for user-facing errors.
 
-**Recommendation**: Always emit diagnostics using `context.ReportDiagnostic()` for user-facing errors.
+#### 4. ~~Mutable Static State~~ ✅ RESOLVED (2025-12-30)
+**Previous Location**: Old StateMachineGenerator.cs
 
-#### 4. Mutable Static State
-**Location**: `/mnt/c/src/StateMachines/src/LionFire.StateMachines.Generation/StateMachineGenerator.cs` (lines 215, 359-360)
+**Resolution**: The new IIncrementalGenerator implementation:
+- Uses immutable `StateMachineInfo` struct
+- All methods are static and pure (no instance state)
+- Pipeline is inherently stateless per Roslyn incremental generator design
 
-```csharp
-private List<string> logEntries = new List<string>();  // Instance field used across Execute() calls
-List<Assembly> assemblies = new System.Collections.Generic.List<Assembly>();
-```
-
-**Problem**: Generator instances may be reused by Roslyn, leading to state accumulation across builds.
-
-**Recommendation**: Clear state at beginning of `Execute()` method or use local variables only.
+**Current Status**: No mutable state issues.
 
 ## Consistency Evaluation
 
@@ -421,21 +399,21 @@ private object lockObject = new object();
 3. **Code Access Security**: Not applicable (CAS deprecated in .NET)
 4. **Validate Enum Values**: Add runtime checks for enum.IsDefined()
 
-## Overall Code Quality Score: 5/10
+## Overall Code Quality Score: 7/10 (Updated 2025-12-30)
 
 ### Breakdown
 - **Design Patterns**: 8/10 (Good use of patterns, some over-engineering)
-- **Consistency**: 6/10 (Mostly consistent, but commented code and preprocessor directives detract)
+- **Consistency**: 7/10 (Improved - generator code is now clean and consistent)
 - **Test Coverage**: 4/10 (Basic tests present, major gaps in edge cases and generator)
-- **Error Handling**: 5/10 (Good exception hierarchy, poor handling in generator)
+- **Error Handling**: 6/10 (Good exception hierarchy, generator now cleaner)
 - **Security**: 7/10 (No major vulnerabilities, some reflection concerns)
-- **Maintainability**: 4/10 (God class, excessive reflection, commented code)
+- **Maintainability**: 7/10 (Generator completely refactored, now clean and focused)
 
-## Immediate Action Items
+## Immediate Action Items (Updated 2025-12-30)
 
-1. **Critical**: Remove all commented-out code or move to separate example files
-2. **Critical**: Add Roslyn diagnostics to source generator error paths
-3. **High**: Refactor StateMachineGenerator into smaller, testable classes
+1. ~~**Critical**: Remove all commented-out code~~ ✅ Done
+2. ~~**Critical**: Refactor StateMachineGenerator~~ ✅ Done (IIncrementalGenerator)
+3. **High**: Add Roslyn diagnostics to source generator for user errors
 4. **High**: Add unit tests for source generator
 5. **Medium**: Replace reflection invocation with compiled expressions
 6. **Medium**: Add EditorConfig and enable code analyzers

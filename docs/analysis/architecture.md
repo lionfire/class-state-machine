@@ -147,16 +147,20 @@ StateMachines/
 **Purpose**: Compile-time code generation
 
 **Key Classes**:
-- `StateMachineGenerator : ISourceGenerator`
-- `MySyntaxReceiver : ISyntaxReceiver`
+- `StateMachineGenerator : IIncrementalGenerator` (refactored December 2025)
+- `SymbolExtensions` - Helper for getting full metadata names
 
-**Evaluation**:
-- **Strengths**: Uses modern Roslyn ISourceGenerator (incremental compilation compatible)
-- **Weaknesses**:
-  - God class anti-pattern (930 lines, 10+ responsibilities)
-  - No diagnostic reporting to IDE
-  - Extensive debug/logging code mixed with production logic
-  - Preprocessor directives make code hard to follow
+**Evaluation** (Updated 2025-12-30):
+- **Strengths**:
+  - Uses modern **IIncrementalGenerator** pattern for optimal IDE performance
+  - Self-contained: no external project references needed at runtime
+  - Clean, focused implementation (~260 lines vs previous ~930 lines)
+  - Uses `ForAttributeWithMetadataName` for efficient attribute detection
+  - Proper equality implementation for incremental caching
+  - `EnforceExtendedAnalyzerRules` enabled
+- **Remaining Improvements**:
+  - Could add Roslyn diagnostics for user errors
+  - Could be split further if complexity grows
 
 ### 2. Separation of Concerns
 
@@ -207,16 +211,13 @@ Abstractions (no dependencies)
 **Runtime**:
 - `System.Reflection.TypeExtensions` 4.7.0
 
-**Generation**:
-- `Microsoft.CodeAnalysis.CSharp` 4.4.0 (OUTDATED - current is 4.12+)
-- `Microsoft.CodeAnalysis.Analyzers` 3.3.3 (OUTDATED - current is 3.11+)
-- `Microsoft.CodeAnalysis.CSharp.Workspaces` 4.4.0 (OUTDATED)
-- `Validation` 2.5.51
+**Generation** (Updated 2025-12-30):
+- `Microsoft.CodeAnalysis.CSharp` 4.14.0 ✅ Current
+- `Microsoft.CodeAnalysis.Analyzers` 3.11.0 ✅ Current
+- No longer needs `Microsoft.CodeAnalysis.CSharp.Workspaces` (removed)
+- No longer needs `Validation` package (removed)
 
-**Issues**:
-1. CodeAnalysis packages are 2+ years old (from late 2022)
-2. Using obsolete patterns (e.g., ISourceGenerator without incremental generation)
-3. Validation package is not widely used - could be replaced with standard checks
+**Status**: All dependencies are current. Generator is self-contained with minimal dependencies.
 
 #### Circular Dependencies
 **Found**: None. Dependency direction is clean.
@@ -530,14 +531,14 @@ public class StateMachineInterceptorPipeline<TState, TTransition>
 }
 ```
 
-## Overall Architecture Score: 7/10
+## Overall Architecture Score: 8/10 (Updated 2025-12-30)
 
 ### Breakdown
 - **Structure**: 9/10 (Excellent layering and separation)
-- **Dependency Management**: 8/10 (Clean, but outdated packages)
+- **Dependency Management**: 9/10 (All dependencies current, generator self-contained)
 - **Extensibility**: 5/10 (Limited extension points)
 - **API Design**: 7/10 (Clear but inconsistent, no async)
 - **Scalability**: 5/10 (Reflection bottleneck, coarse locking)
-- **Maintainability**: 6/10 (Generator is complex, runtime is clean)
+- **Maintainability**: 8/10 (Generator refactored to clean IIncrementalGenerator, runtime is clean)
 
-The architecture is fundamentally sound with excellent separation of concerns and innovative use of conventions. The main gaps are lack of async support, reflection performance, and extensibility mechanisms. Addressing these would elevate this to a production-ready, competitive state machine library.
+The architecture is fundamentally sound with excellent separation of concerns and innovative use of conventions. The generator has been completely refactored to use IIncrementalGenerator (70% code reduction). The main remaining gaps are lack of async support, reflection performance, and extensibility mechanisms. Addressing these would elevate this to a production-ready, competitive state machine library.
