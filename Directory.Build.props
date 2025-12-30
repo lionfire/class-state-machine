@@ -25,8 +25,11 @@
 	</PropertyGroup>
 
   <PropertyGroup>
+    <VersionPrefix>8.0.0</VersionPrefix>
+    <VersionSuffix>preview</VersionSuffix>
+
     <Authors>Jared Thirsk</Authors>
-    <Copyright>2010-2023 Jared Thirsk</Copyright>
+    <Copyright>2010-2025 Jared Thirsk</Copyright>
     <Company>LionFire Games</Company>
     <RepositoryUrl>https://github.com/lionfire/Core</RepositoryUrl>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
