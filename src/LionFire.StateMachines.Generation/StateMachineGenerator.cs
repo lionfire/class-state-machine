@@ -17,8 +17,9 @@ using System.Text;
 using Microsoft.CodeAnalysis.Text;
 using System.Diagnostics;
 using System.Runtime.Serialization;
+#if WriteFromSyntax
 using Microsoft.CodeAnalysis.CSharp.Formatting;
-//using Microsoft.CodeAnalysis.CSharp.Formatting;
+#endif
 
 namespace LionFire.StateMachines.Class.Generation
 {

@@ -11,6 +11,10 @@
     <FileVersion>2.0.1</FileVersion>-->
     <LangVersion>latest</LangVersion>
     <IsRoslynComponent>true</IsRoslynComponent>
+    <!-- TODO: Convert to IIncrementalGenerator and enable EnforceExtendedAnalyzerRules -->
+    <EnforceExtendedAnalyzerRules>false</EnforceExtendedAnalyzerRules>
+    <!-- RS1042: Suppress warning about types from Workspaces - will be fixed when converting to IIncrementalGenerator -->
+    <NoWarn>$(NoWarn);RS1042</NoWarn>
     <Configurations>Debug;Release</Configurations>
   </PropertyGroup>
   <ItemGroup>
@@ -20,9 +24,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.4.0" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.3.3" PrivateAssets="all" />
-    <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.4.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" PrivateAssets="all" />
+    <PackageReference Include="Microsoft.CodeAnalysis.Analyzers" Version="3.11.0" PrivateAssets="all" />
+    <!-- Workspaces is not recommended for source generators (RS1038) and the code using it is #if'd out -->
+    <!-- <PackageReference Include="Microsoft.CodeAnalysis.CSharp.Workspaces" Version="4.14.0" PrivateAssets="all" /> -->
     
     <!--<PackageReference Include="Humanizer.Core" Version="2.11.10" />
     <PackageReference Include="Microsoft.Bcl.AsyncInterfaces" Version="6.0.0" />
