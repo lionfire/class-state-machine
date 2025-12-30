@@ -1,50 +1,44 @@
-﻿using Microsoft.CodeAnalysis;
-using System;
-using System.Collections.Generic;
+using Microsoft.CodeAnalysis;
 using System.Text;
 
-namespace LionFire.ExtensionMethods.CodeAnalysis
+namespace LionFire.StateMachines.Class.Generation;
+
+// Retrieved from https://stackoverflow.com/a/27106959/208304
+internal static class SymbolExtensions
 {
-    public static class INamespaceOrSymbolExtensions
+    public static string GetFullMetadataName(this INamespaceOrTypeSymbol symbol)
     {
-        // Retrieved from https://stackoverflow.com/a/27106959/208304
-
-        public static string GetFullMetadataName(this INamespaceOrTypeSymbol symbol)
+        ISymbol s = symbol;
+        if (s == null || IsRootNamespace(s))
         {
-            ISymbol s = symbol;
-            if (s == null || IsRootNamespace(s))
+            return string.Empty;
+        }
+
+        var sb = new StringBuilder(s.MetadataName);
+        var last = s;
+
+        s = s.ContainingSymbol;
+
+        while (!IsRootNamespace(s))
+        {
+            if (s is ITypeSymbol && last is ITypeSymbol)
             {
-                return string.Empty;
+                sb.Insert(0, '+');
+            }
+            else
+            {
+                sb.Insert(0, '.');
             }
 
-            var sb = new StringBuilder(s.MetadataName);
-            var last = s;
-
+            sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
             s = s.ContainingSymbol;
-
-            while (!IsRootNamespace(s))
-            {
-                if (s is ITypeSymbol && last is ITypeSymbol)
-                {
-                    sb.Insert(0, '+');
-                }
-                else
-                {
-                    sb.Insert(0, '.');
-                }
-
-                sb.Insert(0, s.OriginalDefinition.ToDisplayString(SymbolDisplayFormat.MinimallyQualifiedFormat));
-                //sb.Insert(0, s.MetadataName);
-                s = s.ContainingSymbol;
-            }
-
-            return sb.ToString();
         }
 
-        private static bool IsRootNamespace(ISymbol symbol)
-        {
-            INamespaceSymbol s = null;
-            return ((s = symbol as INamespaceSymbol) != null) && s.IsGlobalNamespace;
-        }
+        return sb.ToString();
+    }
+
+    private static bool IsRootNamespace(ISymbol symbol)
+    {
+        return symbol is INamespaceSymbol ns && ns.IsGlobalNamespace;
     }
 }
