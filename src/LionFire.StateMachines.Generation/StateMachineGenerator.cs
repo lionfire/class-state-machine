@@ -37,47 +37,88 @@ public class StateMachineGenerator : IIncrementalGenerator
             .ForAttributeWithMetadataName(
                 StateMachineAttributeFullName,
                 predicate: static (node, _) => node is ClassDeclarationSyntax,
-                transform: static (context, ct) => GetStateMachineInfo(context, ct))
-            .Where(static info => info is not null);
+                transform: static (context, ct) => GetGeneratorResult(context, ct));
 
-        // Generate source for each state machine class
-        context.RegisterSourceOutput(classDeclarations, static (spc, info) =>
+        // Generate source and report diagnostics for each state machine class
+        context.RegisterSourceOutput(classDeclarations, static (spc, result) =>
         {
-            if (info is null) return;
+            // Report any diagnostics
+            foreach (var diagnostic in result.Diagnostics)
+            {
+                spc.ReportDiagnostic(diagnostic);
+            }
 
-            var source = GenerateStateMachineCode(info.Value);
-            spc.AddSource($"{info.Value.ClassName}.StateMachine.g.cs", source);
+            // Generate source if we have valid info
+            if (result.Info is not null)
+            {
+                var source = GenerateStateMachineCode(result.Info.Value);
+                spc.AddSource($"{result.Info.Value.ClassName}.StateMachine.g.cs", source);
+            }
         });
     }
 
-    private static StateMachineInfo? GetStateMachineInfo(
+    private static GeneratorResult GetGeneratorResult(
         GeneratorAttributeSyntaxContext context,
         CancellationToken cancellationToken)
     {
+        var diagnostics = ImmutableArray.CreateBuilder<Diagnostic>();
+
         if (context.TargetNode is not ClassDeclarationSyntax classDeclaration)
-            return null;
+            return new GeneratorResult(null, diagnostics.ToImmutable());
 
         var classSymbol = context.TargetSymbol as INamedTypeSymbol;
         if (classSymbol is null)
-            return null;
+            return new GeneratorResult(null, diagnostics.ToImmutable());
+
+        // Check if class is partial
+        var isPartial = classDeclaration.Modifiers.Any(m => m.IsKind(SyntaxKind.PartialKeyword));
+        if (!isPartial)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.ClassMustBePartial,
+                classDeclaration.Identifier.GetLocation(),
+                classSymbol.Name));
+            return new GeneratorResult(null, diagnostics.ToImmutable());
+        }
 
         // Get the [StateMachine] attribute data
         var attributeData = context.Attributes
             .FirstOrDefault(a => a.AttributeClass?.GetFullMetadataName() == StateMachineAttributeFullName);
 
         if (attributeData is null)
-            return null;
+            return new GeneratorResult(null, diagnostics.ToImmutable());
 
         // Extract state and transition types from attribute constructor arguments
         if (attributeData.ConstructorArguments.Length < 2)
-            return null;
+            return new GeneratorResult(null, diagnostics.ToImmutable());
 
         var stateTypeArg = attributeData.ConstructorArguments[0];
         var transitionTypeArg = attributeData.ConstructorArguments[1];
 
-        if (stateTypeArg.Value is not INamedTypeSymbol stateTypeSymbol ||
-            transitionTypeArg.Value is not INamedTypeSymbol transitionTypeSymbol)
-            return null;
+        var stateTypeSymbol = stateTypeArg.Value as INamedTypeSymbol;
+        var transitionTypeSymbol = transitionTypeArg.Value as INamedTypeSymbol;
+
+        // Validate state type is an enum
+        if (stateTypeSymbol is null || stateTypeSymbol.TypeKind != TypeKind.Enum)
+        {
+            var typeName = stateTypeSymbol?.Name ?? stateTypeArg.Value?.ToString() ?? "null";
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.StateTypeMustBeEnum,
+                attributeData.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation(),
+                typeName));
+            return new GeneratorResult(null, diagnostics.ToImmutable());
+        }
+
+        // Validate transition type is an enum
+        if (transitionTypeSymbol is null || transitionTypeSymbol.TypeKind != TypeKind.Enum)
+        {
+            var typeName = transitionTypeSymbol?.Name ?? transitionTypeArg.Value?.ToString() ?? "null";
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.TransitionTypeMustBeEnum,
+                attributeData.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation(),
+                typeName));
+            return new GeneratorResult(null, diagnostics.ToImmutable());
+        }
 
         // Get flags if provided
         var flags = GenerateStateMachineFlags.None;
@@ -88,7 +129,7 @@ public class StateMachineGenerator : IIncrementalGenerator
         }
 
         if (flags.HasFlag(GenerateStateMachineFlags.DisableGeneration))
-            return null;
+            return new GeneratorResult(null, diagnostics.ToImmutable());
 
         // Get namespace
         var namespaceName = classSymbol.ContainingNamespace.IsGlobalNamespace
@@ -109,6 +150,23 @@ public class StateMachineGenerator : IIncrementalGenerator
             .Select(f => f.Name)
             .ToImmutableArray();
 
+        // Warn if enums are empty
+        if (stateMembers.Length == 0)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.StateEnumEmpty,
+                attributeData.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation(),
+                stateTypeSymbol.Name));
+        }
+
+        if (transitionMembers.Length == 0)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.TransitionEnumEmpty,
+                attributeData.ApplicationSyntaxReference?.GetSyntax(cancellationToken).GetLocation(),
+                transitionTypeSymbol.Name));
+        }
+
         // Get methods defined on the class to determine which transitions are used
         var classMethods = classDeclaration.Members
             .OfType<MethodDeclarationSyntax>()
@@ -127,13 +185,24 @@ public class StateMachineGenerator : IIncrementalGenerator
                 .Where(t => HasConventionMethod(t, classMethods, classProperties))
                 .ToImmutableArray();
 
-        return new StateMachineInfo(
+        // Warn if no transitions will be generated
+        if (usedTransitions.Length == 0 && transitionMembers.Length > 0)
+        {
+            diagnostics.Add(Diagnostic.Create(
+                Diagnostics.NoTransitionsGenerated,
+                classDeclaration.Identifier.GetLocation(),
+                classSymbol.Name));
+        }
+
+        var info = new StateMachineInfo(
             classSymbol.Name,
             namespaceName,
             stateTypeSymbol.GetFullMetadataName(),
             transitionTypeSymbol.GetFullMetadataName(),
             usedTransitions,
             flags);
+
+        return new GeneratorResult(info, diagnostics.ToImmutable());
     }
 
     private static bool HasConventionMethod(string transition, ImmutableHashSet<string> methods, ImmutableHashSet<string> properties)
@@ -205,6 +274,52 @@ public class StateMachineGenerator : IIncrementalGenerator
         }
 
         return sb.ToString();
+    }
+
+    /// <summary>
+    /// Result from analyzing a class with [StateMachine] attribute.
+    /// Contains either valid info for generation or diagnostics to report.
+    /// </summary>
+    private readonly struct GeneratorResult : IEquatable<GeneratorResult>
+    {
+        public StateMachineInfo? Info { get; }
+        public ImmutableArray<Diagnostic> Diagnostics { get; }
+
+        public GeneratorResult(StateMachineInfo? info, ImmutableArray<Diagnostic> diagnostics)
+        {
+            Info = info;
+            Diagnostics = diagnostics;
+        }
+
+        public bool Equals(GeneratorResult other)
+        {
+            if (!EqualityComparer<StateMachineInfo?>.Default.Equals(Info, other.Info))
+                return false;
+
+            if (Diagnostics.Length != other.Diagnostics.Length)
+                return false;
+
+            // Compare diagnostic IDs for equality (not full diagnostic comparison)
+            for (int i = 0; i < Diagnostics.Length; i++)
+            {
+                if (Diagnostics[i].Id != other.Diagnostics[i].Id)
+                    return false;
+            }
+
+            return true;
+        }
+
+        public override bool Equals(object obj) => obj is GeneratorResult other && Equals(other);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = Info?.GetHashCode() ?? 0;
+                hash = hash * 31 + Diagnostics.Length;
+                return hash;
+            }
+        }
     }
 
     private readonly struct StateMachineInfo : IEquatable<StateMachineInfo>

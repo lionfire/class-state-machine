@@ -13,6 +13,8 @@
     <IsRoslynComponent>true</IsRoslynComponent>
     <EnforceExtendedAnalyzerRules>true</EnforceExtendedAnalyzerRules>
     <Configurations>Debug;Release</Configurations>
+    <!-- RS2008: Analyzer release tracking is optional for simple generators -->
+    <NoWarn>$(NoWarn);RS2008</NoWarn>
     <PackageReadmeFile>README.md</PackageReadmeFile>
   </PropertyGroup>
 
