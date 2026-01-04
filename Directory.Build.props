@@ -71,8 +71,8 @@
   <Copy SourceFiles="$(OutputPath)\$(PackageId).$(PackageVersion).nupkg" DestinationFolder="c:\\src\packages\\" ContinueOnError="true"/>
 </Target>-->
 
-	<Target Name="AfterPack" AfterTargets="Pack">
-		<Exec Command="dotnet nuget push $(PackageOutputPath)*.nupkg --source LionFireLocal" />
+	<Target Name="AfterPack" AfterTargets="Pack" Condition="'$(DisableNugetPush)' != 'true'">
+		<Exec Command="dotnet nuget push $(PackageOutputPath)*.nupkg &#45;&#45;source LionFireLocal" />
 	</Target>
 	
 </Project>
